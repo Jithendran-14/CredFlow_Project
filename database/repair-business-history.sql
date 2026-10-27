@@ -1,0 +1,19 @@
+-- Repair an older local schema to match the business-history writer.
+-- Run as SYS/SYSTEM in FREEPDB1. Safe to rerun; preserves existing mappings.
+-- Existing rows receive the repair time, not a reconstructed historical time.
+WHENEVER SQLERROR EXIT SQL.SQLCODE ROLLBACK;
+SET SERVEROUTPUT ON;
+ALTER SESSION SET CONTAINER=FREEPDB1;
+DECLARE n NUMBER;
+BEGIN
+ SELECT COUNT(*) INTO n FROM ALL_TAB_COLUMNS
+ WHERE OWNER='CF_CONSENT' AND TABLE_NAME='CF_FINANCIAL_PROVIDER_MAP' AND COLUMN_NAME='UPDATED_AT';
+ IF n=0 THEN
+  EXECUTE IMMEDIATE 'ALTER TABLE CF_CONSENT.CF_FINANCIAL_PROVIDER_MAP ADD (UPDATED_AT TIMESTAMP(6) WITH TIME ZONE DEFAULT SYSTIMESTAMP NOT NULL)';
+  DBMS_OUTPUT.PUT_LINE('Added missing financial-provider mapping UPDATED_AT column.');
+ ELSE
+  DBMS_OUTPUT.PUT_LINE('UPDATED_AT already exists; no change needed.');
+ END IF;
+END;
+/
+EXIT SUCCESS;

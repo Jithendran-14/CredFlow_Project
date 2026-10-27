@@ -1,0 +1,16 @@
+server.address=127.0.0.1
+spring.datasource.url=jdbc:oracle:thin:@//localhost:1521/FREEPDB1
+spring.datasource.username=CF_APPLICATION
+spring.datasource.password=CHANGE_ME
+spring.jpa.hibernate.ddl-auto=validate
+spring.kafka.bootstrap-servers=127.0.0.1:9092
+credflow.jwt.issuer=credflow-auth
+credflow.jwt.audience=credflow-api
+credflow.jwt.public-key-path=C:/credflow/CredFlow/backend/runtime/private/auth-public.pem
+credflow.status-consumer.enabled=true
+credflow.outbox.enabled=true
+credflow.outbox.poll-delay-ms=1000
+credflow.outbox.initial-delay-ms=1000
+spring.kafka.producer.key-serializer=org.apache.kafka.common.serialization.StringSerializer
+spring.kafka.producer.value-serializer=org.apache.kafka.common.serialization.StringSerializer
+spring.kafka.producer.acks=all

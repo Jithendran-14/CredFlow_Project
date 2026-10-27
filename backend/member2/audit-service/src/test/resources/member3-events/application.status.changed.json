@@ -1,0 +1,25 @@
+{
+  "eventId": "333067ad-bd9f-5e35-b86c-486361b6c5d7",
+  "eventType": "application.status.changed",
+  "schemaVersion": "1.0",
+  "occurredAt": "2026-10-16T09:00:00Z",
+  "producer": "orchestration-service",
+  "applicationId": "52de19d2-1bea-5fd3-9685-868e1a7207b7",
+  "aggregateVersion": 1,
+  "correlationId": "demo-flow-bank-a-104",
+  "data": {
+    "previousStatus": "APPROVED",
+    "status": "OFFER_ACCEPTED",
+    "processingHealth": "OK",
+    "workflowVersion": 12,
+    "applicationRevision": 1
+  },
+  "actor": {
+    "type": "SYSTEM_CLIENT",
+    "subject": "orchestration-service"
+  },
+  "originActor": {
+    "type": "HUMAN",
+    "subject": "seller-demo-104"
+  }
+}

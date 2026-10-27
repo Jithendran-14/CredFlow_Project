@@ -1,0 +1,2785 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "CredFlow Lender Integration API",
+    "version": "1.0.1",
+    "description": "Member 3 durable lender dispatch, adapters, officer commands and authenticated callbacks. All mutable requests are persisted before asynchronous delivery. The configured Integration audience is required; Gateway should expose only the officer routes to authorized lender officers, never private service or operational routes. Aligned to the two upstream contracts dated 2026-10-16. Validate the configured Member 1 RS256 issuer, audience, expiry and nonblank subject against an explicitly configured JWKS or public RSA key. Default FLAT mode reads roles (or role) and trusted camelCase sellerId/marketplaceId/lenderId; KEYCLOAK mode is opt-in. SELLER ownership uses trusted sellerId when stored, with legacy subject fallback only for older workflows without it. MARKETPLACE is a scoped alias for MARKETPLACE_OPERATIONS. Auth currently does not provision lender officers or machine clients. Internal endpoints still require designated client identity and narrow scopes; ADMIN cannot bypass them. See docs/team-contract-alignment.md."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8087",
+      "description": "Direct service address; expose public routes through Member 1 Gateway after route configuration."
+    }
+  ],
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "paths": {
+    "/api/v1/internal/submissions": {
+      "post": {
+        "operationId": "reserveSubmission",
+        "summary": "Reserve a lender submission",
+        "description": "Private Orchestration client only: integration.write scope and orchestration-service azp/client_id. No human bearer token is allowed. Uses submissionId, not a header, as the durable idempotency reference. Reconciliation looks up the same reference after a transport timeout before retrying creation.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/CorrelationId"
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Accepted for durable asynchronous processing.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Trace ID for this request.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Dispatch"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmissionRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/internal/submissions/{id}": {
+      "get": {
+        "operationId": "getDispatch",
+        "summary": "Read dispatch/reconciliation status",
+        "description": "Private Orchestration client only: integration.write scope and orchestration-service azp/client_id. No human bearer token is allowed.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/CorrelationId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success; an idempotent replay returns the original response.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Trace ID for this request.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Dispatch"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        }
+      }
+    },
+    "/api/v1/internal/submissions/{id}/information-responses": {
+      "post": {
+        "operationId": "sendInformationAnswers",
+        "summary": "Queue information responses",
+        "description": "Private Orchestration client only: integration.write scope and orchestration-service azp/client_id. No human bearer token is allowed. Idempotency-Key is a durable UUID command identity. Include trusted originActor in the body. Cancellation before reservation must include applicationId, applicationRevision and lenderId.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/CorrelationId"
+          },
+          {
+            "$ref": "#/components/parameters/CommandKey"
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Accepted for durable asynchronous processing.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Trace ID for this request.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandAccepted"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnswerInformationCommand"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/internal/submissions/{id}/offer-acceptances": {
+      "post": {
+        "operationId": "sendOfferAcceptance",
+        "summary": "Queue offer acceptances",
+        "description": "Private Orchestration client only: integration.write scope and orchestration-service azp/client_id. No human bearer token is allowed. Idempotency-Key is a durable UUID command identity. Include trusted originActor in the body. Cancellation before reservation must include applicationId, applicationRevision and lenderId.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/CorrelationId"
+          },
+          {
+            "$ref": "#/components/parameters/CommandKey"
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Accepted for durable asynchronous processing.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Trace ID for this request.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandAccepted"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AcceptOfferCommand"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/internal/submissions/{id}/offer-declines": {
+      "post": {
+        "operationId": "sendOfferDecline",
+        "summary": "Queue offer declines",
+        "description": "Private Orchestration client only: integration.write scope and orchestration-service azp/client_id. No human bearer token is allowed. Idempotency-Key is a durable UUID command identity. Include trusted originActor in the body. Cancellation before reservation must include applicationId, applicationRevision and lenderId.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/CorrelationId"
+          },
+          {
+            "$ref": "#/components/parameters/CommandKey"
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Accepted for durable asynchronous processing.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Trace ID for this request.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandAccepted"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeclineOfferCommand"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/internal/submissions/{id}/cancellation": {
+      "post": {
+        "operationId": "sendCancellation",
+        "summary": "Queue cancellation",
+        "description": "Private Orchestration client only: integration.write scope and orchestration-service azp/client_id. No human bearer token is allowed. Idempotency-Key is a durable UUID command identity. Include trusted originActor in the body. Cancellation before reservation must include applicationId, applicationRevision and lenderId.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/CorrelationId"
+          },
+          {
+            "$ref": "#/components/parameters/CommandKey"
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Accepted for durable asynchronous processing.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Trace ID for this request.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandAccepted"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CancellationCommand"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/submissions/{id}/decisions": {
+      "post": {
+        "operationId": "recordLenderDecision",
+        "summary": "Queue lender decisions",
+        "description": "LENDER_OFFICER with lender.review scope and lenderId (legacy lender_id accepted) matching the persisted submission. Cross-lender requests return 404. Caller-supplied originActor, decidedAt and causationId are discarded; Integration records the authenticated human actor and stamps decidedAt once. Retry with the same UUID Idempotency-Key and unchanged business payload.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/CorrelationId"
+          },
+          {
+            "$ref": "#/components/parameters/CommandKey"
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Accepted for durable asynchronous processing.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Trace ID for this request.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandAccepted"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DecisionCommand"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/submissions/{id}/information-requests": {
+      "post": {
+        "operationId": "requestInformation",
+        "summary": "Queue lender information requests",
+        "description": "LENDER_OFFICER with lender.review scope and lenderId (legacy lender_id accepted) matching the persisted submission. Cross-lender requests return 404. Caller-supplied originActor, decidedAt and causationId are discarded; Integration records the authenticated human actor and stamps decidedAt once. Retry with the same UUID Idempotency-Key and unchanged business payload.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/CorrelationId"
+          },
+          {
+            "$ref": "#/components/parameters/CommandKey"
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Accepted for durable asynchronous processing.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Trace ID for this request.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandAccepted"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InformationRequestCommand"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/submissions/{id}/offers": {
+      "post": {
+        "operationId": "createLenderOffer",
+        "summary": "Queue lender offers",
+        "description": "LENDER_OFFICER with lender.review scope and lenderId (legacy lender_id accepted) matching the persisted submission. Cross-lender requests return 404. Caller-supplied originActor, decidedAt and causationId are discarded; Integration records the authenticated human actor and stamps decidedAt once. Retry with the same UUID Idempotency-Key and unchanged business payload.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/CorrelationId"
+          },
+          {
+            "$ref": "#/components/parameters/CommandKey"
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Accepted for durable asynchronous processing.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Trace ID for this request.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandAccepted"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OfferTerms"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/submissions/{id}/offer-withdrawals": {
+      "post": {
+        "operationId": "withdrawLenderOffer",
+        "summary": "Queue lender offer withdrawals",
+        "description": "LENDER_OFFICER with lender.review scope and lenderId (legacy lender_id accepted) matching the persisted submission. Cross-lender requests return 404. Caller-supplied originActor, decidedAt and causationId are discarded; Integration records the authenticated human actor and stamps decidedAt once. Retry with the same UUID Idempotency-Key and unchanged business payload.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/CorrelationId"
+          },
+          {
+            "$ref": "#/components/parameters/CommandKey"
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Accepted for durable asynchronous processing.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Trace ID for this request.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandAccepted"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WithdrawOfferCommand"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/lenders/{lenderId}/callbacks": {
+      "post": {
+        "operationId": "receiveLenderCallback",
+        "summary": "Persist an authenticated lender callback",
+        "description": "Private lender system client only: lender.callback scope and the configured callback client for the path lender UUID (mock-bank-a or mock-nbfc-b). The path/body lender IDs and stored application, submission, revision, external ID and command origin must match. Duplicate eventId with identical content is accepted; changed content/sequence reuse returns 409. Out-of-order callbacks stay pending until earlier sequence/prerequisites are applied. Retry an early SUBMISSION_NOT_RESERVED_RETRY 409 with the same eventId.",
+        "parameters": [
+          {
+            "name": "lenderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/CorrelationId"
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Accepted for durable asynchronous processing.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Trace ID for this request.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CallbackAccepted"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LenderCallback"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/internal/integration-tasks/{id}": {
+      "get": {
+        "operationId": "getIntegrationTask",
+        "summary": "Read Integration task or callback state",
+        "description": "ADMIN role and ops.replay scope required. Private operational endpoint. The ID can identify either an Integration task or a lender callback. Read failureCode to diagnose a dead task without exposing its payload.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/CorrelationId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success; an idempotent replay returns the original response.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Trace ID for this request.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IntegrationTask"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        }
+      }
+    },
+    "/api/v1/internal/integration-tasks/{id}/replay": {
+      "post": {
+        "operationId": "replayIntegrationTask",
+        "summary": "Replay a dead Integration task or callback",
+        "description": "ADMIN role and ops.replay scope required. Private operational endpoint. The ID can identify either an Integration task or a lender callback. Read failureCode to diagnose a dead task without exposing its payload. Only DEAD records can be replayed; retained payload, identities, correlation and command order are reused.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/CorrelationId"
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Accepted for durable asynchronous processing.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Trace ID for this request.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskReplayAccepted"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        }
+      }
+    },
+    "/api/v1/internal/deliveries": {
+      "get": {
+        "operationId": "listDeliveries",
+        "summary": "List durable delivery records",
+        "description": "ADMIN role and ops.replay scope required. Private operational API; do not expose through public Gateway routes. Payload content and credentials are deliberately omitted.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/CorrelationId"
+          },
+          {
+            "name": "kind",
+            "in": "query",
+            "schema": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/DeliveryKind"
+                }
+              ],
+              "default": "JOB"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/DeliveryState"
+                }
+              ],
+              "default": "DEAD"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 0,
+              "default": 0,
+              "maximum": 2147483647
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success; an idempotent replay returns the original response.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Trace ID for this request.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeliveryPage"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        }
+      }
+    },
+    "/api/v1/internal/deliveries/{kind}/{id}": {
+      "get": {
+        "operationId": "getDelivery",
+        "summary": "Read delivery state",
+        "description": "ADMIN role and ops.replay scope required. Private operational API; do not expose through public Gateway routes. Payload content and credentials are deliberately omitted.",
+        "parameters": [
+          {
+            "name": "kind",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/DeliveryKind"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/CorrelationId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success; an idempotent replay returns the original response.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Trace ID for this request.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeliveryStatus"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        }
+      }
+    },
+    "/api/v1/internal/deliveries/{kind}/{id}/replay": {
+      "post": {
+        "operationId": "replayDelivery",
+        "summary": "Replay a dead delivery",
+        "description": "ADMIN role and ops.replay scope required. Private operational API; do not expose through public Gateway routes. Payload content and credentials are deliberately omitted. Only DEAD records may be replayed. The original identity, payload and correlation are retained. A job replay updates workflow processing health without changing business status.",
+        "parameters": [
+          {
+            "name": "kind",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/DeliveryKind"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/CorrelationId"
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Accepted for durable asynchronous processing.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Trace ID for this request.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReplayAccepted"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Validate the configured Member 1 RS256 issuer, audience, expiry and nonblank subject against an explicitly configured JWKS or public RSA key. Default FLAT mode reads roles (or role) and trusted camelCase sellerId/marketplaceId/lenderId; KEYCLOAK mode is opt-in. SELLER ownership uses trusted sellerId when stored, with legacy subject fallback only for older workflows without it. MARKETPLACE is a scoped alias for MARKETPLACE_OPERATIONS. Auth currently does not provision lender officers or machine clients. Internal endpoints still require designated client identity and narrow scopes; ADMIN cannot bypass them. See docs/team-contract-alignment.md."
+      }
+    },
+    "schemas": {
+      "Actor": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "HUMAN",
+              "SYSTEM_CLIENT"
+            ]
+          },
+          "subject": {
+            "type": "string",
+            "minLength": 1
+          },
+          "organisationId": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "type",
+          "subject"
+        ]
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "correlationId": {
+            "type": "string"
+          },
+          "fieldErrors": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "field": {
+                  "type": "string"
+                },
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "field",
+                "message"
+              ]
+            }
+          }
+        },
+        "required": [
+          "code",
+          "message",
+          "correlationId",
+          "fieldErrors"
+        ]
+      },
+      "Question": {
+        "type": "object",
+        "properties": {
+          "questionId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "prompt": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1000
+          }
+        },
+        "required": [
+          "questionId",
+          "prompt"
+        ]
+      },
+      "Answer": {
+        "type": "object",
+        "properties": {
+          "questionId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "answerText": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4000
+          }
+        },
+        "required": [
+          "questionId",
+          "answerText"
+        ],
+        "additionalProperties": false
+      },
+      "OfferTerms": {
+        "type": "object",
+        "properties": {
+          "offerId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "offeredAmount": {
+            "type": "string",
+            "pattern": "^[0-9]{1,17}\\.[0-9]{2}$",
+            "example": "100000.00",
+            "description": "Decimal string with exactly two fractional digits; positive for requested/offered amounts and nonnegative for fees."
+          },
+          "currency": {
+            "type": "string",
+            "enum": [
+              "INR"
+            ]
+          },
+          "annualInterestRatePercent": {
+            "type": "string",
+            "pattern": "^[0-9]{1,3}(\\.[0-9]{1,4})?$",
+            "description": "Decimal string in the inclusive range 0..100."
+          },
+          "interestRateType": {
+            "type": "string",
+            "enum": [
+              "FIXED"
+            ]
+          },
+          "tenureMonths": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1,
+            "maximum": 120
+          },
+          "repaymentFrequency": {
+            "type": "string",
+            "enum": [
+              "MONTHLY"
+            ]
+          },
+          "feesAmount": {
+            "type": "string",
+            "pattern": "^[0-9]{1,17}\\.[0-9]{2}$",
+            "example": "100000.00",
+            "description": "Decimal string with exactly two fractional digits; positive for requested/offered amounts and nonnegative for fees."
+          },
+          "termsReference": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Must be in the future when a new command is first persisted; replay retains the original request."
+          },
+          "version": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0,
+            "maximum": 0
+          }
+        },
+        "required": [
+          "offerId",
+          "offeredAmount",
+          "currency",
+          "annualInterestRatePercent",
+          "interestRateType",
+          "tenureMonths",
+          "repaymentFrequency",
+          "feesAmount",
+          "termsReference",
+          "expiresAt"
+        ]
+      },
+      "DecisionCommand": {
+        "type": "object",
+        "properties": {
+          "decisionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "decision": {
+            "type": "string",
+            "enum": [
+              "APPROVED",
+              "REJECTED",
+              "MANUAL_REVIEW",
+              "ACTION_REQUIRED"
+            ]
+          },
+          "reasonCode": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Required for REJECTED."
+          },
+          "informationRequestId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Required for ACTION_REQUIRED."
+          },
+          "questions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Question"
+            },
+            "minItems": 1,
+            "maxItems": 50,
+            "description": "Required for ACTION_REQUIRED; unique questionId values."
+          },
+          "offer": {
+            "$ref": "#/components/schemas/OfferTerms"
+          },
+          "decidedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Integration stamps this once when accepting an officer command; trusted simulator commands and callbacks preserve it."
+          },
+          "originActor": {
+            "$ref": "#/components/schemas/Actor"
+          },
+          "correlationId": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "causationId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "decisionId",
+          "decision"
+        ],
+        "description": "offer is allowed only for APPROVED. ACTION_REQUIRED requires informationRequestId and questions; REJECTED requires reasonCode."
+      },
+      "InformationRequestCommand": {
+        "type": "object",
+        "properties": {
+          "informationRequestId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "questions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Question"
+            },
+            "minItems": 1,
+            "maxItems": 50
+          },
+          "originActor": {
+            "$ref": "#/components/schemas/Actor"
+          },
+          "correlationId": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "causationId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "informationRequestId",
+          "questions"
+        ]
+      },
+      "AnswerInformationCommand": {
+        "type": "object",
+        "properties": {
+          "informationRequestId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "answers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Answer"
+            },
+            "minItems": 1,
+            "maxItems": 50
+          },
+          "syntheticDocumentReferences": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^synthetic://[A-Za-z0-9_./-]{1,200}$"
+            }
+          },
+          "originActor": {
+            "$ref": "#/components/schemas/Actor"
+          },
+          "correlationId": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "causationId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "informationRequestId",
+          "answers"
+        ]
+      },
+      "AcceptOfferCommand": {
+        "type": "object",
+        "properties": {
+          "offerId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "acceptanceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "expectedOfferVersion": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "acceptedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Locally committed acceptance time; at most 60 seconds in the future."
+          },
+          "originActor": {
+            "$ref": "#/components/schemas/Actor"
+          },
+          "correlationId": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "causationId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "offerId",
+          "acceptanceId",
+          "expectedOfferVersion",
+          "acceptedAt"
+        ]
+      },
+      "DeclineOfferCommand": {
+        "type": "object",
+        "properties": {
+          "offerId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "declineId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "operationAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "originActor": {
+            "$ref": "#/components/schemas/Actor"
+          },
+          "correlationId": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "causationId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "offerId"
+        ]
+      },
+      "WithdrawOfferCommand": {
+        "type": "object",
+        "properties": {
+          "offerId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "reasonCode": {
+            "type": "string"
+          },
+          "originActor": {
+            "$ref": "#/components/schemas/Actor"
+          },
+          "correlationId": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "causationId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "offerId"
+        ]
+      },
+      "CancellationCommand": {
+        "type": "object",
+        "properties": {
+          "cancellationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "applicationId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Required when cancellation arrives before a submission reservation."
+          },
+          "submissionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "applicationRevision": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          },
+          "lenderId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "originActor": {
+            "$ref": "#/components/schemas/Actor"
+          },
+          "correlationId": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "causationId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "cancellationId"
+        ]
+      },
+      "CommandAccepted": {
+        "type": "object",
+        "properties": {
+          "submissionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "operationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "QUEUED"
+            ]
+          }
+        },
+        "required": [
+          "submissionId",
+          "operationId",
+          "status"
+        ]
+      },
+      "CallbackAccepted": {
+        "type": "object",
+        "properties": {
+          "eventId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING"
+            ]
+          }
+        },
+        "required": [
+          "eventId",
+          "status"
+        ]
+      },
+      "OfferAcknowledgement": {
+        "type": "object",
+        "properties": {
+          "offerId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "acceptanceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "lenderAcknowledgementStatus": {
+            "type": "string",
+            "enum": [
+              "ACKNOWLEDGED",
+              "FAILED"
+            ]
+          }
+        },
+        "required": [
+          "offerId",
+          "acceptanceId",
+          "lenderAcknowledgementStatus"
+        ]
+      },
+      "InformationRequestedCallback": {
+        "type": "object",
+        "properties": {
+          "eventId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "lenderSequence": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1,
+            "maximum": 2147483647
+          },
+          "applicationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "submissionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "applicationRevision": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          },
+          "lenderId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "lenderApplicationId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "At most five minutes in the future."
+          },
+          "originActor": {
+            "$ref": "#/components/schemas/Actor"
+          },
+          "causationId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The persisted command ID that caused this callback; use the same ID on every retry."
+          },
+          "eventType": {
+            "type": "string",
+            "enum": [
+              "lender.information.requested"
+            ]
+          },
+          "data": {
+            "$ref": "#/components/schemas/InformationRequestCommand"
+          }
+        },
+        "required": [
+          "eventId",
+          "lenderSequence",
+          "applicationId",
+          "submissionId",
+          "applicationRevision",
+          "lenderId",
+          "lenderApplicationId",
+          "occurredAt",
+          "eventType",
+          "data"
+        ]
+      },
+      "InformationAnsweredCallback": {
+        "type": "object",
+        "properties": {
+          "eventId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "lenderSequence": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1,
+            "maximum": 2147483647
+          },
+          "applicationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "submissionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "applicationRevision": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          },
+          "lenderId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "lenderApplicationId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "At most five minutes in the future."
+          },
+          "originActor": {
+            "$ref": "#/components/schemas/Actor"
+          },
+          "causationId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The persisted command ID that caused this callback; use the same ID on every retry."
+          },
+          "eventType": {
+            "type": "string",
+            "enum": [
+              "lender.information.answered"
+            ]
+          },
+          "data": {
+            "$ref": "#/components/schemas/AnswerInformationCommand"
+          }
+        },
+        "required": [
+          "eventId",
+          "lenderSequence",
+          "applicationId",
+          "submissionId",
+          "applicationRevision",
+          "lenderId",
+          "lenderApplicationId",
+          "occurredAt",
+          "eventType",
+          "data"
+        ]
+      },
+      "DecisionCallback": {
+        "type": "object",
+        "properties": {
+          "eventId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "lenderSequence": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1,
+            "maximum": 2147483647
+          },
+          "applicationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "submissionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "applicationRevision": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          },
+          "lenderId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "lenderApplicationId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "At most five minutes in the future."
+          },
+          "originActor": {
+            "$ref": "#/components/schemas/Actor"
+          },
+          "causationId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The persisted command ID that caused this callback; use the same ID on every retry."
+          },
+          "eventType": {
+            "type": "string",
+            "enum": [
+              "lender.decision.received"
+            ]
+          },
+          "data": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DecisionCommand"
+              },
+              {
+                "type": "object",
+                "required": [
+                  "decidedAt"
+                ]
+              }
+            ]
+          }
+        },
+        "required": [
+          "eventId",
+          "lenderSequence",
+          "applicationId",
+          "submissionId",
+          "applicationRevision",
+          "lenderId",
+          "lenderApplicationId",
+          "occurredAt",
+          "eventType",
+          "data"
+        ]
+      },
+      "OfferCreatedCallback": {
+        "type": "object",
+        "properties": {
+          "eventId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "lenderSequence": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1,
+            "maximum": 2147483647
+          },
+          "applicationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "submissionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "applicationRevision": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          },
+          "lenderId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "lenderApplicationId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "At most five minutes in the future."
+          },
+          "originActor": {
+            "$ref": "#/components/schemas/Actor"
+          },
+          "causationId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The persisted command ID that caused this callback; use the same ID on every retry."
+          },
+          "eventType": {
+            "type": "string",
+            "enum": [
+              "loan.offer.created"
+            ]
+          },
+          "data": {
+            "$ref": "#/components/schemas/OfferTerms"
+          }
+        },
+        "required": [
+          "eventId",
+          "lenderSequence",
+          "applicationId",
+          "submissionId",
+          "applicationRevision",
+          "lenderId",
+          "lenderApplicationId",
+          "occurredAt",
+          "eventType",
+          "data"
+        ]
+      },
+      "OfferAcknowledgedCallback": {
+        "type": "object",
+        "properties": {
+          "eventId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "lenderSequence": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1,
+            "maximum": 2147483647
+          },
+          "applicationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "submissionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "applicationRevision": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          },
+          "lenderId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "lenderApplicationId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "At most five minutes in the future."
+          },
+          "originActor": {
+            "$ref": "#/components/schemas/Actor"
+          },
+          "causationId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The persisted command ID that caused this callback; use the same ID on every retry."
+          },
+          "eventType": {
+            "type": "string",
+            "enum": [
+              "loan.offer.acknowledged"
+            ]
+          },
+          "data": {
+            "$ref": "#/components/schemas/OfferAcknowledgement"
+          }
+        },
+        "required": [
+          "eventId",
+          "lenderSequence",
+          "applicationId",
+          "submissionId",
+          "applicationRevision",
+          "lenderId",
+          "lenderApplicationId",
+          "occurredAt",
+          "eventType",
+          "data"
+        ]
+      },
+      "OfferWithdrawnCallback": {
+        "type": "object",
+        "properties": {
+          "eventId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "lenderSequence": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1,
+            "maximum": 2147483647
+          },
+          "applicationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "submissionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "applicationRevision": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          },
+          "lenderId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "lenderApplicationId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "At most five minutes in the future."
+          },
+          "originActor": {
+            "$ref": "#/components/schemas/Actor"
+          },
+          "causationId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The persisted command ID that caused this callback; use the same ID on every retry."
+          },
+          "eventType": {
+            "type": "string",
+            "enum": [
+              "loan.offer.withdrawn"
+            ]
+          },
+          "data": {
+            "$ref": "#/components/schemas/WithdrawOfferCommand"
+          }
+        },
+        "required": [
+          "eventId",
+          "lenderSequence",
+          "applicationId",
+          "submissionId",
+          "applicationRevision",
+          "lenderId",
+          "lenderApplicationId",
+          "occurredAt",
+          "eventType",
+          "data"
+        ]
+      },
+      "CancellationAcknowledgedCallback": {
+        "type": "object",
+        "properties": {
+          "eventId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "lenderSequence": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1,
+            "maximum": 2147483647
+          },
+          "applicationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "submissionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "applicationRevision": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          },
+          "lenderId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "lenderApplicationId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "At most five minutes in the future."
+          },
+          "originActor": {
+            "$ref": "#/components/schemas/Actor"
+          },
+          "causationId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The persisted command ID that caused this callback; use the same ID on every retry."
+          },
+          "eventType": {
+            "type": "string",
+            "enum": [
+              "lender.cancellation.acknowledged"
+            ]
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "cancellationId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "cancellationAcknowledgementStatus": {
+                "type": "string",
+                "enum": [
+                  "ACKNOWLEDGED"
+                ]
+              }
+            },
+            "required": [
+              "cancellationAcknowledgementStatus"
+            ]
+          }
+        },
+        "required": [
+          "eventId",
+          "lenderSequence",
+          "applicationId",
+          "submissionId",
+          "applicationRevision",
+          "lenderId",
+          "lenderApplicationId",
+          "occurredAt",
+          "eventType",
+          "data"
+        ]
+      },
+      "LenderCallback": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/InformationRequestedCallback"
+          },
+          {
+            "$ref": "#/components/schemas/InformationAnsweredCallback"
+          },
+          {
+            "$ref": "#/components/schemas/DecisionCallback"
+          },
+          {
+            "$ref": "#/components/schemas/OfferCreatedCallback"
+          },
+          {
+            "$ref": "#/components/schemas/OfferAcknowledgedCallback"
+          },
+          {
+            "$ref": "#/components/schemas/OfferWithdrawnCallback"
+          },
+          {
+            "$ref": "#/components/schemas/CancellationAcknowledgedCallback"
+          }
+        ],
+        "discriminator": {
+          "propertyName": "eventType",
+          "mapping": {
+            "lender.information.requested": "#/components/schemas/InformationRequestedCallback",
+            "lender.information.answered": "#/components/schemas/InformationAnsweredCallback",
+            "lender.decision.received": "#/components/schemas/DecisionCallback",
+            "loan.offer.created": "#/components/schemas/OfferCreatedCallback",
+            "loan.offer.acknowledged": "#/components/schemas/OfferAcknowledgedCallback",
+            "loan.offer.withdrawn": "#/components/schemas/OfferWithdrawnCallback",
+            "lender.cancellation.acknowledged": "#/components/schemas/CancellationAcknowledgedCallback"
+          }
+        },
+        "description": "Create eventId once and reuse the complete body on retry. lenderSequence increases by one per submission. Binding and trusted command origin are checked before persistence. Callback data cannot override the authenticated lender identity."
+      },
+      "SubmissionRequest": {
+        "type": "object",
+        "properties": {
+          "submissionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "applicationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "applicationRevision": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          },
+          "lenderId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "productId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sellerSubject": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Optional legacy authenticated subject reference; never fabricate one from a trusted sellerId."
+          },
+          "marketplaceSellerId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "sellerId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120,
+            "description": "Trusted opaque Application seller identity, e.g. SELLER-1001, independent of JWT sub or marketplaceSellerId. Recommended for new workflows; never coerce to UUID."
+          },
+          "registeredBusinessName": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255
+          },
+          "requestedAmount": {
+            "type": "string",
+            "pattern": "^[0-9]{1,17}\\.[0-9]{2}$",
+            "example": "100000.00",
+            "description": "Decimal string with exactly two fractional digits; positive for requested/offered amounts and nonnegative for fees."
+          },
+          "currency": {
+            "type": "string",
+            "enum": [
+              "INR"
+            ]
+          },
+          "loanPurpose": {
+            "type": "string",
+            "minLength": 1,
+            "enum": [
+              "PURCHASE_INVENTORY",
+              "WORKING_CAPITAL",
+              "BUSINESS_EXPANSION"
+            ]
+          },
+          "financialSnapshotId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "consentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "consentVersion": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          },
+          "eligibilityResultId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "verificationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "originActor": {
+            "$ref": "#/components/schemas/Actor"
+          },
+          "causationId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "submissionId",
+          "applicationId",
+          "applicationRevision",
+          "lenderId",
+          "productId",
+          "registeredBusinessName",
+          "requestedAmount",
+          "currency",
+          "loanPurpose",
+          "financialSnapshotId",
+          "consentId",
+          "consentVersion",
+          "eligibilityResultId",
+          "verificationId",
+          "originActor"
+        ],
+        "description": "New submissions carry trusted sellerId; optional marketplaceSellerId supplies the bank-specific seller reference, otherwise sellerId is used. sellerSubject is optional legacy metadata. Same submissionId/content returns original reservation; changed content conflicts. Legacy sellerSubject alone never invents a trusted seller identity.",
+        "anyOf": [
+          {
+            "required": [
+              "sellerId"
+            ]
+          },
+          {
+            "required": [
+              "sellerSubject",
+              "marketplaceSellerId"
+            ]
+          }
+        ]
+      },
+      "Dispatch": {
+        "type": "object",
+        "properties": {
+          "submissionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "applicationRevision": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          },
+          "lenderId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "lenderApplicationId": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "QUEUED",
+              "SENDING",
+              "SUBMITTED",
+              "OUTCOME_UNKNOWN",
+              "FAILED",
+              "CANCELLED"
+            ]
+          },
+          "receivedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "submissionId",
+          "applicationRevision",
+          "lenderId",
+          "status"
+        ]
+      },
+      "IntegrationTask": {
+        "type": "object",
+        "properties": {
+          "taskId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "submissionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "applicationRevision": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          },
+          "lenderId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "lenderApplicationId": {
+            "type": "string"
+          },
+          "operation": {
+            "type": "string",
+            "enum": [
+              "SUBMIT",
+              "DECISION",
+              "REQUEST_INFORMATION",
+              "ANSWER_INFORMATION",
+              "CREATE_OFFER",
+              "WITHDRAW_OFFER",
+              "ACCEPT_OFFER",
+              "DECLINE_OFFER",
+              "CANCEL",
+              "CALLBACK"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "WORKING",
+              "DONE",
+              "APPLIED",
+              "DEAD"
+            ]
+          },
+          "attempts": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "nextAttemptAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "failureCode": {
+            "type": "string"
+          },
+          "decisionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "informationRequestId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "offerId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "acceptanceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "cancellationId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "taskId",
+          "submissionId",
+          "applicationRevision",
+          "lenderId",
+          "operation",
+          "status",
+          "attempts",
+          "nextAttemptAt"
+        ]
+      },
+      "TaskReplayAccepted": {
+        "type": "object",
+        "properties": {
+          "operationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING"
+            ]
+          }
+        },
+        "required": [
+          "operationId",
+          "status"
+        ]
+      },
+      "DeliveryKind": {
+        "type": "string",
+        "enum": [
+          "JOB",
+          "INBOX",
+          "OUTBOX",
+          "DLT"
+        ]
+      },
+      "DeliveryState": {
+        "type": "string",
+        "enum": [
+          "PENDING",
+          "RUNNING",
+          "DONE",
+          "DEAD"
+        ]
+      },
+      "Delivery": {
+        "type": "object",
+        "properties": {
+          "deliveryId": {
+            "type": "string",
+            "description": "Stored identity, including kind prefix."
+          },
+          "operationId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Bare UUID to use in the status/replay path."
+          },
+          "kind": {
+            "$ref": "#/components/schemas/DeliveryKind"
+          },
+          "applicationId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "target": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "$ref": "#/components/schemas/DeliveryState"
+          },
+          "attempts": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "nextAttemptAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "error": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "deliveryId",
+          "operationId",
+          "kind",
+          "applicationId",
+          "target",
+          "status",
+          "attempts",
+          "nextAttemptAt"
+        ]
+      },
+      "DeliveryPage": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Delivery"
+            }
+          },
+          "page": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "size": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1,
+            "maximum": 100
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "items",
+          "page",
+          "size",
+          "totalElements"
+        ]
+      },
+      "DeliveryStatus": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "$ref": "#/components/schemas/DeliveryState"
+          },
+          "attempts": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "nextAttemptAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "error": {
+            "type": "string",
+            "description": "Empty string when no failure is stored."
+          }
+        },
+        "required": [
+          "status",
+          "attempts",
+          "nextAttemptAt",
+          "error"
+        ]
+      },
+      "ReplayAccepted": {
+        "type": "object",
+        "properties": {
+          "operationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING"
+            ]
+          }
+        },
+        "required": [
+          "operationId",
+          "status"
+        ]
+      }
+    },
+    "responses": {
+      "Error400": {
+        "description": "Invalid input, header, pagination or unsupported operation.",
+        "headers": {
+          "X-Correlation-ID": {
+            "description": "Trace ID for this request.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "Error401": {
+        "description": "Missing, expired or invalid JWT, issuer or service audience.",
+        "headers": {
+          "X-Correlation-ID": {
+            "description": "Trace ID for this request.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "Error403": {
+        "description": "Missing role, scope or trusted system client.",
+        "headers": {
+          "X-Correlation-ID": {
+            "description": "Trace ID for this request.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "Error404": {
+        "description": "Resource absent or concealed because the authenticated caller does not own it.",
+        "headers": {
+          "X-Correlation-ID": {
+            "description": "Trace ID for this request.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "Error409": {
+        "description": "Business state, optimistic version, duplicate reference or idempotency conflict.",
+        "headers": {
+          "X-Correlation-ID": {
+            "description": "Trace ID for this request.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "Error503": {
+        "description": "Required dependency unavailable.",
+        "headers": {
+          "X-Correlation-ID": {
+            "description": "Trace ID for this request.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      }
+    },
+    "parameters": {
+      "CorrelationId": {
+        "name": "X-Correlation-ID",
+        "in": "header",
+        "required": false,
+        "description": "Preserved across trusted service calls and events; response always exposes X-Correlation-ID. Invalid public header values are replaced with a generated ID.",
+        "schema": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9._:-]{1,100}$"
+        }
+      },
+      "IdempotencyKey": {
+        "name": "Idempotency-Key",
+        "in": "header",
+        "required": true,
+        "description": "Use the same key and identical request to retry. Reusing it with changed content returns 409. Human API keys are scoped to the authenticated subject, operation and resource.",
+        "schema": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        }
+      },
+      "CommandKey": {
+        "name": "Idempotency-Key",
+        "in": "header",
+        "required": true,
+        "description": "Caller-generated UUID command ID; persisted across retries. Reuse for a different submission, operation or business payload returns 409.",
+        "schema": {
+          "type": "string",
+          "format": "uuid"
+        }
+      }
+    }
+  }
+}

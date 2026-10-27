@@ -1,0 +1,41 @@
+{
+  "marketplaceSellerId": "SELLER-104",
+  "asOfDate": "2026-10-13",
+  "currency": "INR",
+  "coverageStatus": "COMPLETE",
+  "months": [
+    {
+      "periodStart": "2026-07-01",
+      "periodEnd": "2026-07-31",
+      "grossSalesAmount": "600000.00",
+      "returnAmount": "50000.00",
+      "payoutAmount": "530000.00",
+      "orderCount": 600,
+      "returnedOrderCount": 50
+    },
+    {
+      "periodStart": "2026-08-01",
+      "periodEnd": "2026-08-31",
+      "grossSalesAmount": "600000.00",
+      "returnAmount": "50000.00",
+      "payoutAmount": "530000.00",
+      "orderCount": 600,
+      "returnedOrderCount": 50
+    },
+    {
+      "periodStart": "2026-09-01",
+      "periodEnd": "2026-09-30",
+      "grossSalesAmount": "600000.00",
+      "returnAmount": "50000.00",
+      "payoutAmount": "530000.00",
+      "orderCount": 600,
+      "returnedOrderCount": 50
+    }
+  ],
+  "expected": {
+    "averageMonthlyNetSales": "550000.00",
+    "averageMonthlyPayout": "530000.00",
+    "returnRatePercent": "8.33",
+    "selectedLender": "Bank A"
+  }
+}

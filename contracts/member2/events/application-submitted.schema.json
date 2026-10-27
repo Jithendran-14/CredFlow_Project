@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://credflow.example.test/events/application-submitted.schema.json",
+  "allOf": [
+    {
+      "$ref": "event-envelope.schema.json"
+    },
+    {
+      "type": "object",
+      "properties": {
+        "eventType": {
+          "const": "application.submitted"
+        },
+        "producer": {
+          "const": "application-service"
+        },
+        "data": {
+          "type": "object",
+          "required": [
+            "sellerId",
+            "marketplaceId",
+            "requestedAmount",
+            "currency",
+            "status",
+            "applicationRevision",
+            "sellerRequestReference"
+          ],
+          "properties": {
+            "sellerId": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "marketplaceId": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "requestedAmount": {
+              "type": "string",
+              "pattern": "^[0-9]{1,17}\\.[0-9]{2}$"
+            },
+            "currency": {
+              "const": "INR"
+            },
+            "status": {
+              "const": "DRAFT"
+            },
+            "applicationRevision": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "sellerRequestReference": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            }
+          },
+          "additionalProperties": false
+        }
+      }
+    }
+  ]
+}

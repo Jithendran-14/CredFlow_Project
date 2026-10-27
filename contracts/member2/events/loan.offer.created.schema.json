@@ -1,0 +1,232 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://credflow.local/contracts/events/loan.offer.created.schema.json",
+  "title": "loan.offer.created",
+  "type": "object",
+  "properties": {
+    "eventId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "eventType": {
+      "const": "loan.offer.created"
+    },
+    "schemaVersion": {
+      "const": "1.0"
+    },
+    "occurredAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "producer": {
+      "const": "lender-integration-service"
+    },
+    "applicationId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "aggregateVersion": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "correlationId": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9._:-]{1,100}$"
+    },
+    "causationId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "data": {
+      "type": "object",
+      "properties": {
+        "applicationId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "submissionId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "applicationRevision": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "lenderId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "lenderApplicationId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "originActor": {
+          "type": "object",
+          "properties": {
+            "type": {
+              "enum": [
+                "HUMAN",
+                "SYSTEM",
+                "SYSTEM_CLIENT"
+              ]
+            },
+            "subject": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 255
+            },
+            "organisationId": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "required": [
+            "type",
+            "subject"
+          ],
+          "additionalProperties": false
+        },
+        "correlationId": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9._:-]{1,100}$"
+        },
+        "causationId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "offerId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "offeredAmount": {
+          "type": "string",
+          "pattern": "^[0-9]{1,17}\\.[0-9]{2}$",
+          "not": {
+            "pattern": "^0+\\.00$"
+          }
+        },
+        "currency": {
+          "const": "INR"
+        },
+        "annualInterestRatePercent": {
+          "type": "string",
+          "pattern": "^(100(\\.0{1,4})?|0?[0-9]{1,2}(\\.[0-9]{1,4})?)$"
+        },
+        "interestRateType": {
+          "const": "FIXED"
+        },
+        "tenureMonths": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 120
+        },
+        "repaymentFrequency": {
+          "const": "MONTHLY"
+        },
+        "feesAmount": {
+          "type": "string",
+          "pattern": "^[0-9]{1,17}\\.[0-9]{2}$"
+        },
+        "termsReference": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 255
+        },
+        "expiresAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "version": {
+          "const": 0
+        },
+        "status": {
+          "const": "ACTIVE"
+        }
+      },
+      "required": [
+        "submissionId",
+        "applicationRevision",
+        "lenderId",
+        "lenderApplicationId",
+        "offerId",
+        "offeredAmount",
+        "currency",
+        "annualInterestRatePercent",
+        "interestRateType",
+        "tenureMonths",
+        "repaymentFrequency",
+        "feesAmount",
+        "termsReference",
+        "expiresAt",
+        "version"
+      ],
+      "additionalProperties": false
+    },
+    "actor": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "enum": [
+            "HUMAN",
+            "SYSTEM",
+            "SYSTEM_CLIENT"
+          ]
+        },
+        "subject": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 255
+        },
+        "organisationId": {
+          "type": "string",
+          "format": "uuid"
+        }
+      },
+      "required": [
+        "type",
+        "subject"
+      ],
+      "additionalProperties": false
+    },
+    "originActor": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "enum": [
+            "HUMAN",
+            "SYSTEM",
+            "SYSTEM_CLIENT"
+          ]
+        },
+        "subject": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 255
+        },
+        "organisationId": {
+          "type": "string",
+          "format": "uuid"
+        }
+      },
+      "required": [
+        "type",
+        "subject"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "eventId",
+    "eventType",
+    "schemaVersion",
+    "occurredAt",
+    "producer",
+    "applicationId",
+    "aggregateVersion",
+    "correlationId",
+    "data",
+    "actor"
+  ],
+  "additionalProperties": false
+}

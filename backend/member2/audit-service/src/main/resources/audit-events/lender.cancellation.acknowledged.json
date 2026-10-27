@@ -1,0 +1,43 @@
+{
+  "eventType": "lender.cancellation.acknowledged",
+  "producer": "lender-integration-service",
+  "required": [
+    "submissionId",
+    "applicationRevision",
+    "lenderId",
+    "cancellationAcknowledgementStatus"
+  ],
+  "fields": {
+    "applicationId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "submissionId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "applicationRevision": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "lenderId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "lenderApplicationId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 120
+    },
+    "cancellationId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "cancellationByReference": {
+      "type": "boolean"
+    },
+    "cancellationAcknowledgementStatus": {
+      "const": "ACKNOWLEDGED"
+    }
+  }
+}

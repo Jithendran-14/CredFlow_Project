@@ -1,0 +1,30 @@
+{
+  "eventId": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb9",
+  "applicationId": "11111111-1111-4111-8111-111111111119",
+  "eventType": "application.revised",
+  "schemaVersion": "1.0",
+  "producer": "application-service",
+  "occurredAt": "2026-10-21T10:00:00Z",
+  "aggregateVersion": 2,
+  "correlationId": "correction-test",
+  "actor": {
+    "type": "HUMAN",
+    "subject": "seller"
+  },
+  "data": {
+    "operationId": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa9",
+    "applicationRevision": 2,
+    "previousRevision": 1,
+    "requestedAmount": "180000.00",
+    "currency": "INR",
+    "loanPurpose": "WORKING_CAPITAL",
+    "sellerId": "22222222-2222-4222-8222-222222222229",
+    "marketplaceId": "11111111-1111-4111-8111-111111111111",
+    "marketplaceSellerId": "VS-1009",
+    "businessProfile": {
+      "displayName": "Verification Seller",
+      "businessName": "Verification Business",
+      "businessStartDate": "2020-01-01"
+    }
+  }
+}

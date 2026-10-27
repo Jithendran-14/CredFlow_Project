@@ -1,0 +1,21 @@
+{
+  "eventId": "882d1f79-ee4d-4332-a698-0157784c4448",
+  "eventType": "financial.consent.expired",
+  "schemaVersion": "1.0",
+  "occurredAt": "2026-10-22T10:00:00Z",
+  "producer": "consent-verification-service",
+  "applicationId": "63f05889-c924-44ed-a94b-b4583fad8f89",
+  "aggregateVersion": 1,
+  "correlationId": "financial-consent-test",
+  "actor": {
+    "type": "SYSTEM_CLIENT",
+    "subject": "consent-verification-service"
+  },
+  "data": {
+    "financialConsentId": "e02491bd-b10b-4c19-9acd-dfb823e52066",
+    "financialConsentVersion": 1,
+    "applicationRevision": 1,
+    "operationalConsentVersion": 1,
+    "status": "EXPIRED"
+  }
+}

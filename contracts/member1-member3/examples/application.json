@@ -1,0 +1,17 @@
+{
+  "sellerId": "SELLER-1001",
+  "sellerSubject": "seller-demo-104",
+  "marketplaceId": "dd77e60a-5273-5576-b177-e07066692696",
+  "marketplaceSellerId": "SELLER-104",
+  "applicationRevision": 1,
+  "requestedAmount": "500000.00",
+  "currency": "INR",
+  "loanPurpose": "PURCHASE_INVENTORY",
+  "businessProfile": {
+    "businessName": "Demo Clothing",
+    "displayName": "Demo Seller",
+    "businessStartDate": "2024-01-01"
+  },
+  "sellerRequestReference": "DEMO-104-001",
+  "status": "DRAFT"
+}

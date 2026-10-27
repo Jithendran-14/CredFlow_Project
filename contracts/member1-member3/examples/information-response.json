@@ -1,0 +1,12 @@
+{
+  "expectedInformationVersion": 0,
+  "answers": [
+    {
+      "questionId": "purpose-detail",
+      "answerText": "Seasonal inventory from a fictional supplier."
+    }
+  ],
+  "syntheticDocumentReferences": [
+    "synthetic://documents/demo-invoice"
+  ]
+}

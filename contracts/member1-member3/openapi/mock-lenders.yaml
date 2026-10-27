@@ -1,0 +1,2784 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "CredFlow Lender Simulator API",
+    "version": "1.1.0",
+    "description": "Member 3 private Bank A and NBFC B simulators, using distinct lender wire formats and independent processes and isolated Oracle schemas. The canonical paths below are used by Integration. Java also accepts applications/cases aliases under each bank prefix; clients should use the documented canonical lender routes. No real lender or frontend is included. Callbacks are delivered to Integration using each lender callback client and stable eventId/sequence. Aligned to the two upstream contracts dated 2026-10-16. Validate the configured Member 1 RS256 issuer, audience, expiry and nonblank subject against an explicitly configured JWKS or public RSA key. Default FLAT mode reads roles (or role) and trusted camelCase sellerId/marketplaceId/lenderId; KEYCLOAK mode is opt-in. SELLER ownership uses trusted sellerId when stored, with legacy subject fallback only for older workflows without it. MARKETPLACE is a scoped alias for MARKETPLACE_OPERATIONS. Auth currently does not provision lender officers or machine clients. Internal endpoints still require designated client identity and narrow scopes; ADMIN cannot bypass them. See docs/team-contract-alignment.md. The Member 2 verification identity module and financial-data provider endpoint are upstream proposed modules and are not implemented by these lender paths. The identity and financial-provider calls belong to Consent and Verification, never Orchestration or Eligibility directly."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8091",
+      "description": "Bank A only; path-level servers select NBFC B where applicable"
+    }
+  ],
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "paths": {
+    "/mock/lenders/bank-a/applications": {
+      "post": {
+        "operationId": "bankASubmit",
+        "summary": "Submit a Bank A application",
+        "description": "Private Integration system client only: configured credflow.simulator.integration-client-id (integration-service by default), plus lender.submit scope. The lender reference is unique inside this lender schema. Same reference and identical business payload returns the original receipt; changed content returns 409. A cancellation tombstone prevents later creation. This endpoint returns 200, including first submission.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/CorrelationId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success; an idempotent replay returns the original response.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Trace ID for this request.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BankAReceipt"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BankASubmission"
+              }
+            }
+          }
+        }
+      },
+      "servers": [
+        {
+          "url": "http://localhost:8091"
+        }
+      ]
+    },
+    "/mock/lenders/bank-a/applications/by-reference/{reference}": {
+      "get": {
+        "operationId": "bankALookup",
+        "summary": "Look up Bank A by submission reference",
+        "description": "Private Integration system client only: configured credflow.simulator.integration-client-id (integration-service by default), plus lender.lookup scope. A committed application returns its original receipt; definitive absence or a cancellation tombstone returns 404. Integration must perform this lookup after an uncertain create timeout before another create attempt.",
+        "parameters": [
+          {
+            "name": "reference",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/CorrelationId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success; an idempotent replay returns the original response.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Trace ID for this request.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BankAReceipt"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        }
+      },
+      "servers": [
+        {
+          "url": "http://localhost:8091"
+        }
+      ]
+    },
+    "/mock/lenders/bank-a/applications/by-reference/{reference}/cancellation": {
+      "post": {
+        "operationId": "bankACancelReference",
+        "summary": "Cancel Bank A by reference",
+        "description": "Private Integration system client only: configured credflow.simulator.integration-client-id (integration-service by default), plus lender.command scope. Creates a durable cancellation tombstone even when submission has not arrived, preventing a late create. An existing nonterminal application emits a stable cancellation callback. Repeated cancellation is safe; accepted/declined/rejected applications conflict.",
+        "parameters": [
+          {
+            "name": "reference",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/CorrelationId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success; an idempotent replay returns the original response.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Trace ID for this request.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReferenceCancelled"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReferenceCancellation"
+              }
+            }
+          }
+        }
+      },
+      "servers": [
+        {
+          "url": "http://localhost:8091"
+        }
+      ]
+    },
+    "/mock/lenders/bank-a/applications/{externalId}": {
+      "get": {
+        "operationId": "bankADetails",
+        "summary": "Read Bank A persisted state",
+        "description": "Private Integration system client only: configured credflow.simulator.integration-client-id (integration-service by default), plus lender.lookup scope. externalId is the bankApplicationId or caseId returned in its receipt. State is private test-system data.",
+        "parameters": [
+          {
+            "name": "externalId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/CorrelationId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success; an idempotent replay returns the original response.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Trace ID for this request.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SimulatorState"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        }
+      },
+      "servers": [
+        {
+          "url": "http://localhost:8091"
+        }
+      ]
+    },
+    "/mock/lenders/bank-a/applications/{externalId}/commands/{commandId}": {
+      "post": {
+        "operationId": "bankACommand",
+        "summary": "Apply a Bank A command",
+        "description": "Private Integration system client only: configured credflow.simulator.integration-client-id (integration-service by default), plus lender.command scope. Commands persist state changes and callbacks atomically. Same commandId and identical payload returns the prior acknowledgement; changed payload returns 409. terminal applications reject new business commands. Nested approved offers are fully validated before a decision is recorded. Answers cannot reset an already available offer.",
+        "parameters": [
+          {
+            "name": "externalId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "commandId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/CorrelationId"
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Accepted for durable asynchronous processing.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Trace ID for this request.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SimulatorCommandAccepted"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SimulatorCommand"
+              }
+            }
+          }
+        }
+      },
+      "servers": [
+        {
+          "url": "http://localhost:8091"
+        }
+      ]
+    },
+    "/mock/lenders/bank-a/callbacks/{eventId}/replay": {
+      "post": {
+        "operationId": "bankAReplayCallback",
+        "summary": "Replay a dead Bank A callback",
+        "description": "Private Integration system client only: configured credflow.simulator.integration-client-id (integration-service by default), plus ops.replay scope. This endpoint requires the Integration system client rather than a human ADMIN. Only DEAD callbacks belonging to this bank may be replayed. It preserves eventId, sequence, payload, original trace and causation. Returns 200.",
+        "parameters": [
+          {
+            "name": "eventId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/CorrelationId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success; an idempotent replay returns the original response.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Trace ID for this request.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SimulatorCallbackReplay"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        }
+      },
+      "servers": [
+        {
+          "url": "http://localhost:8091"
+        }
+      ]
+    },
+    "/mock/lenders/nbfc-b/cases": {
+      "post": {
+        "operationId": "nbfcBSubmit",
+        "summary": "Submit a NBFC B application",
+        "description": "Private Integration system client only: configured credflow.simulator.integration-client-id (integration-service by default), plus lender.submit scope. The lender reference is unique inside this lender schema. Same reference and identical business payload returns the original receipt; changed content returns 409. A cancellation tombstone prevents later creation. This endpoint returns 200, including first submission.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/CorrelationId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success; an idempotent replay returns the original response.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Trace ID for this request.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NbfcBReceipt"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NbfcBSubmission"
+              }
+            }
+          }
+        }
+      },
+      "servers": [
+        {
+          "url": "http://localhost:8092"
+        }
+      ]
+    },
+    "/mock/lenders/nbfc-b/cases/reference/{reference}": {
+      "get": {
+        "operationId": "nbfcBLookup",
+        "summary": "Look up NBFC B by submission reference",
+        "description": "Private Integration system client only: configured credflow.simulator.integration-client-id (integration-service by default), plus lender.lookup scope. A committed application returns its original receipt; definitive absence or a cancellation tombstone returns 404. Integration must perform this lookup after an uncertain create timeout before another create attempt.",
+        "parameters": [
+          {
+            "name": "reference",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/CorrelationId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success; an idempotent replay returns the original response.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Trace ID for this request.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NbfcBReceipt"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        }
+      },
+      "servers": [
+        {
+          "url": "http://localhost:8092"
+        }
+      ]
+    },
+    "/mock/lenders/nbfc-b/cases/reference/{reference}/withdraw": {
+      "post": {
+        "operationId": "nbfcBCancelReference",
+        "summary": "Cancel NBFC B by reference",
+        "description": "Private Integration system client only: configured credflow.simulator.integration-client-id (integration-service by default), plus lender.command scope. Creates a durable cancellation tombstone even when submission has not arrived, preventing a late create. An existing nonterminal application emits a stable cancellation callback. Repeated cancellation is safe; accepted/declined/rejected applications conflict.",
+        "parameters": [
+          {
+            "name": "reference",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/CorrelationId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success; an idempotent replay returns the original response.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Trace ID for this request.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReferenceCancelled"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReferenceCancellation"
+              }
+            }
+          }
+        }
+      },
+      "servers": [
+        {
+          "url": "http://localhost:8092"
+        }
+      ]
+    },
+    "/mock/lenders/nbfc-b/cases/{externalId}": {
+      "get": {
+        "operationId": "nbfcBDetails",
+        "summary": "Read NBFC B persisted state",
+        "description": "Private Integration system client only: configured credflow.simulator.integration-client-id (integration-service by default), plus lender.lookup scope. externalId is the bankApplicationId or caseId returned in its receipt. State is private test-system data.",
+        "parameters": [
+          {
+            "name": "externalId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/CorrelationId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success; an idempotent replay returns the original response.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Trace ID for this request.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SimulatorState"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        }
+      },
+      "servers": [
+        {
+          "url": "http://localhost:8092"
+        }
+      ]
+    },
+    "/mock/lenders/nbfc-b/cases/{externalId}/commands/{commandId}": {
+      "post": {
+        "operationId": "nbfcBCommand",
+        "summary": "Apply a NBFC B command",
+        "description": "Private Integration system client only: configured credflow.simulator.integration-client-id (integration-service by default), plus lender.command scope. Commands persist state changes and callbacks atomically. Same commandId and identical payload returns the prior acknowledgement; changed payload returns 409. terminal applications reject new business commands. Nested approved offers are fully validated before a decision is recorded. Answers cannot reset an already available offer.",
+        "parameters": [
+          {
+            "name": "externalId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "commandId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/CorrelationId"
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Accepted for durable asynchronous processing.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Trace ID for this request.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SimulatorCommandAccepted"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SimulatorCommand"
+              }
+            }
+          }
+        }
+      },
+      "servers": [
+        {
+          "url": "http://localhost:8092"
+        }
+      ]
+    },
+    "/mock/lenders/nbfc-b/callbacks/{eventId}/replay": {
+      "post": {
+        "operationId": "nbfcBReplayCallback",
+        "summary": "Replay a dead NBFC B callback",
+        "description": "Private Integration system client only: configured credflow.simulator.integration-client-id (integration-service by default), plus ops.replay scope. This endpoint requires the Integration system client rather than a human ADMIN. Only DEAD callbacks belonging to this bank may be replayed. It preserves eventId, sequence, payload, original trace and causation. Returns 200.",
+        "parameters": [
+          {
+            "name": "eventId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/CorrelationId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success; an idempotent replay returns the original response.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Trace ID for this request.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SimulatorCallbackReplay"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        }
+      },
+      "servers": [
+        {
+          "url": "http://localhost:8092"
+        }
+      ]
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Validate the configured Member 1 RS256 issuer, audience, expiry and nonblank subject against an explicitly configured JWKS or public RSA key. Default FLAT mode reads roles (or role) and trusted camelCase sellerId/marketplaceId/lenderId; KEYCLOAK mode is opt-in. SELLER ownership uses trusted sellerId when stored, with legacy subject fallback only for older workflows without it. MARKETPLACE is a scoped alias for MARKETPLACE_OPERATIONS. Auth currently does not provision lender officers or machine clients. Internal endpoints still require designated client identity and narrow scopes; ADMIN cannot bypass them. See docs/team-contract-alignment.md."
+      }
+    },
+    "schemas": {
+      "Actor": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "HUMAN",
+              "SYSTEM_CLIENT"
+            ]
+          },
+          "subject": {
+            "type": "string",
+            "minLength": 1
+          },
+          "organisationId": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "type",
+          "subject"
+        ]
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "correlationId": {
+            "type": "string"
+          },
+          "fieldErrors": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "field": {
+                  "type": "string"
+                },
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "field",
+                "message"
+              ]
+            }
+          }
+        },
+        "required": [
+          "code",
+          "message",
+          "correlationId",
+          "fieldErrors"
+        ]
+      },
+      "Question": {
+        "type": "object",
+        "properties": {
+          "questionId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "prompt": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1000
+          }
+        },
+        "required": [
+          "questionId",
+          "prompt"
+        ]
+      },
+      "Answer": {
+        "type": "object",
+        "properties": {
+          "questionId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "answerText": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4000
+          }
+        },
+        "required": [
+          "questionId",
+          "answerText"
+        ],
+        "additionalProperties": false
+      },
+      "OfferTerms": {
+        "type": "object",
+        "properties": {
+          "offerId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "offeredAmount": {
+            "type": "string",
+            "pattern": "^[0-9]{1,17}\\.[0-9]{2}$",
+            "example": "100000.00",
+            "description": "Decimal string with exactly two fractional digits; positive for requested/offered amounts and nonnegative for fees."
+          },
+          "currency": {
+            "type": "string",
+            "enum": [
+              "INR"
+            ]
+          },
+          "annualInterestRatePercent": {
+            "type": "string",
+            "pattern": "^[0-9]{1,3}(\\.[0-9]{1,4})?$",
+            "description": "Decimal string in the inclusive range 0..100."
+          },
+          "interestRateType": {
+            "type": "string",
+            "enum": [
+              "FIXED"
+            ]
+          },
+          "tenureMonths": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1,
+            "maximum": 120
+          },
+          "repaymentFrequency": {
+            "type": "string",
+            "enum": [
+              "MONTHLY"
+            ]
+          },
+          "feesAmount": {
+            "type": "string",
+            "pattern": "^[0-9]{1,17}\\.[0-9]{2}$",
+            "example": "100000.00",
+            "description": "Decimal string with exactly two fractional digits; positive for requested/offered amounts and nonnegative for fees."
+          },
+          "termsReference": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Must be in the future when a new command is first persisted; replay retains the original request."
+          },
+          "version": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0,
+            "maximum": 0
+          }
+        },
+        "required": [
+          "offerId",
+          "offeredAmount",
+          "currency",
+          "annualInterestRatePercent",
+          "interestRateType",
+          "tenureMonths",
+          "repaymentFrequency",
+          "feesAmount",
+          "termsReference",
+          "expiresAt"
+        ]
+      },
+      "DecisionCommand": {
+        "type": "object",
+        "properties": {
+          "decisionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "decision": {
+            "type": "string",
+            "enum": [
+              "APPROVED",
+              "REJECTED",
+              "MANUAL_REVIEW",
+              "ACTION_REQUIRED"
+            ]
+          },
+          "reasonCode": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Required for REJECTED."
+          },
+          "informationRequestId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Required for ACTION_REQUIRED."
+          },
+          "questions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Question"
+            },
+            "minItems": 1,
+            "maxItems": 50,
+            "description": "Required for ACTION_REQUIRED; unique questionId values."
+          },
+          "offer": {
+            "$ref": "#/components/schemas/OfferTerms"
+          },
+          "decidedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Integration stamps this once when accepting an officer command; trusted simulator commands and callbacks preserve it."
+          },
+          "originActor": {
+            "$ref": "#/components/schemas/Actor"
+          },
+          "correlationId": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "causationId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "decisionId",
+          "decision"
+        ],
+        "description": "offer is allowed only for APPROVED. ACTION_REQUIRED requires informationRequestId and questions; REJECTED requires reasonCode."
+      },
+      "InformationRequestCommand": {
+        "type": "object",
+        "properties": {
+          "informationRequestId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "questions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Question"
+            },
+            "minItems": 1,
+            "maxItems": 50
+          },
+          "originActor": {
+            "$ref": "#/components/schemas/Actor"
+          },
+          "correlationId": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "causationId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "informationRequestId",
+          "questions"
+        ]
+      },
+      "AnswerInformationCommand": {
+        "type": "object",
+        "properties": {
+          "informationRequestId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "answers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Answer"
+            },
+            "minItems": 1,
+            "maxItems": 50
+          },
+          "syntheticDocumentReferences": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^synthetic://[A-Za-z0-9_./-]{1,200}$"
+            }
+          },
+          "originActor": {
+            "$ref": "#/components/schemas/Actor"
+          },
+          "correlationId": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "causationId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "informationRequestId",
+          "answers"
+        ]
+      },
+      "AcceptOfferCommand": {
+        "type": "object",
+        "properties": {
+          "offerId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "acceptanceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "expectedOfferVersion": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "acceptedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Locally committed acceptance time; at most 60 seconds in the future."
+          },
+          "originActor": {
+            "$ref": "#/components/schemas/Actor"
+          },
+          "correlationId": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "causationId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "offerId",
+          "acceptanceId",
+          "expectedOfferVersion",
+          "acceptedAt"
+        ]
+      },
+      "DeclineOfferCommand": {
+        "type": "object",
+        "properties": {
+          "offerId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "declineId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "operationAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "originActor": {
+            "$ref": "#/components/schemas/Actor"
+          },
+          "correlationId": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "causationId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "offerId"
+        ]
+      },
+      "WithdrawOfferCommand": {
+        "type": "object",
+        "properties": {
+          "offerId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "reasonCode": {
+            "type": "string"
+          },
+          "originActor": {
+            "$ref": "#/components/schemas/Actor"
+          },
+          "correlationId": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "causationId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "offerId"
+        ]
+      },
+      "CancellationCommand": {
+        "type": "object",
+        "properties": {
+          "cancellationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "applicationId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Required when cancellation arrives before a submission reservation."
+          },
+          "submissionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "applicationRevision": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          },
+          "lenderId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "originActor": {
+            "$ref": "#/components/schemas/Actor"
+          },
+          "correlationId": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "causationId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "cancellationId"
+        ]
+      },
+      "CommandAccepted": {
+        "type": "object",
+        "properties": {
+          "submissionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "operationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "QUEUED"
+            ]
+          }
+        },
+        "required": [
+          "submissionId",
+          "operationId",
+          "status"
+        ]
+      },
+      "CallbackAccepted": {
+        "type": "object",
+        "properties": {
+          "eventId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING"
+            ]
+          }
+        },
+        "required": [
+          "eventId",
+          "status"
+        ]
+      },
+      "OfferAcknowledgement": {
+        "type": "object",
+        "properties": {
+          "offerId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "acceptanceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "lenderAcknowledgementStatus": {
+            "type": "string",
+            "enum": [
+              "ACKNOWLEDGED",
+              "FAILED"
+            ]
+          }
+        },
+        "required": [
+          "offerId",
+          "acceptanceId",
+          "lenderAcknowledgementStatus"
+        ]
+      },
+      "InformationRequestedCallback": {
+        "type": "object",
+        "properties": {
+          "eventId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "lenderSequence": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1,
+            "maximum": 2147483647
+          },
+          "applicationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "submissionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "applicationRevision": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          },
+          "lenderId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "lenderApplicationId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "At most five minutes in the future."
+          },
+          "originActor": {
+            "$ref": "#/components/schemas/Actor"
+          },
+          "causationId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The persisted command ID that caused this callback; use the same ID on every retry."
+          },
+          "eventType": {
+            "type": "string",
+            "enum": [
+              "lender.information.requested"
+            ]
+          },
+          "data": {
+            "$ref": "#/components/schemas/InformationRequestCommand"
+          }
+        },
+        "required": [
+          "eventId",
+          "lenderSequence",
+          "applicationId",
+          "submissionId",
+          "applicationRevision",
+          "lenderId",
+          "lenderApplicationId",
+          "occurredAt",
+          "eventType",
+          "data"
+        ]
+      },
+      "InformationAnsweredCallback": {
+        "type": "object",
+        "properties": {
+          "eventId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "lenderSequence": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1,
+            "maximum": 2147483647
+          },
+          "applicationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "submissionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "applicationRevision": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          },
+          "lenderId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "lenderApplicationId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "At most five minutes in the future."
+          },
+          "originActor": {
+            "$ref": "#/components/schemas/Actor"
+          },
+          "causationId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The persisted command ID that caused this callback; use the same ID on every retry."
+          },
+          "eventType": {
+            "type": "string",
+            "enum": [
+              "lender.information.answered"
+            ]
+          },
+          "data": {
+            "$ref": "#/components/schemas/AnswerInformationCommand"
+          }
+        },
+        "required": [
+          "eventId",
+          "lenderSequence",
+          "applicationId",
+          "submissionId",
+          "applicationRevision",
+          "lenderId",
+          "lenderApplicationId",
+          "occurredAt",
+          "eventType",
+          "data"
+        ]
+      },
+      "DecisionCallback": {
+        "type": "object",
+        "properties": {
+          "eventId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "lenderSequence": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1,
+            "maximum": 2147483647
+          },
+          "applicationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "submissionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "applicationRevision": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          },
+          "lenderId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "lenderApplicationId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "At most five minutes in the future."
+          },
+          "originActor": {
+            "$ref": "#/components/schemas/Actor"
+          },
+          "causationId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The persisted command ID that caused this callback; use the same ID on every retry."
+          },
+          "eventType": {
+            "type": "string",
+            "enum": [
+              "lender.decision.received"
+            ]
+          },
+          "data": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DecisionCommand"
+              },
+              {
+                "type": "object",
+                "required": [
+                  "decidedAt"
+                ]
+              }
+            ]
+          }
+        },
+        "required": [
+          "eventId",
+          "lenderSequence",
+          "applicationId",
+          "submissionId",
+          "applicationRevision",
+          "lenderId",
+          "lenderApplicationId",
+          "occurredAt",
+          "eventType",
+          "data"
+        ]
+      },
+      "OfferCreatedCallback": {
+        "type": "object",
+        "properties": {
+          "eventId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "lenderSequence": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1,
+            "maximum": 2147483647
+          },
+          "applicationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "submissionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "applicationRevision": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          },
+          "lenderId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "lenderApplicationId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "At most five minutes in the future."
+          },
+          "originActor": {
+            "$ref": "#/components/schemas/Actor"
+          },
+          "causationId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The persisted command ID that caused this callback; use the same ID on every retry."
+          },
+          "eventType": {
+            "type": "string",
+            "enum": [
+              "loan.offer.created"
+            ]
+          },
+          "data": {
+            "$ref": "#/components/schemas/OfferTerms"
+          }
+        },
+        "required": [
+          "eventId",
+          "lenderSequence",
+          "applicationId",
+          "submissionId",
+          "applicationRevision",
+          "lenderId",
+          "lenderApplicationId",
+          "occurredAt",
+          "eventType",
+          "data"
+        ]
+      },
+      "OfferAcknowledgedCallback": {
+        "type": "object",
+        "properties": {
+          "eventId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "lenderSequence": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1,
+            "maximum": 2147483647
+          },
+          "applicationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "submissionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "applicationRevision": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          },
+          "lenderId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "lenderApplicationId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "At most five minutes in the future."
+          },
+          "originActor": {
+            "$ref": "#/components/schemas/Actor"
+          },
+          "causationId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The persisted command ID that caused this callback; use the same ID on every retry."
+          },
+          "eventType": {
+            "type": "string",
+            "enum": [
+              "loan.offer.acknowledged"
+            ]
+          },
+          "data": {
+            "$ref": "#/components/schemas/OfferAcknowledgement"
+          }
+        },
+        "required": [
+          "eventId",
+          "lenderSequence",
+          "applicationId",
+          "submissionId",
+          "applicationRevision",
+          "lenderId",
+          "lenderApplicationId",
+          "occurredAt",
+          "eventType",
+          "data"
+        ]
+      },
+      "OfferWithdrawnCallback": {
+        "type": "object",
+        "properties": {
+          "eventId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "lenderSequence": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1,
+            "maximum": 2147483647
+          },
+          "applicationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "submissionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "applicationRevision": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          },
+          "lenderId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "lenderApplicationId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "At most five minutes in the future."
+          },
+          "originActor": {
+            "$ref": "#/components/schemas/Actor"
+          },
+          "causationId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The persisted command ID that caused this callback; use the same ID on every retry."
+          },
+          "eventType": {
+            "type": "string",
+            "enum": [
+              "loan.offer.withdrawn"
+            ]
+          },
+          "data": {
+            "$ref": "#/components/schemas/WithdrawOfferCommand"
+          }
+        },
+        "required": [
+          "eventId",
+          "lenderSequence",
+          "applicationId",
+          "submissionId",
+          "applicationRevision",
+          "lenderId",
+          "lenderApplicationId",
+          "occurredAt",
+          "eventType",
+          "data"
+        ]
+      },
+      "CancellationAcknowledgedCallback": {
+        "type": "object",
+        "properties": {
+          "eventId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "lenderSequence": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1,
+            "maximum": 2147483647
+          },
+          "applicationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "submissionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "applicationRevision": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          },
+          "lenderId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "lenderApplicationId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "At most five minutes in the future."
+          },
+          "originActor": {
+            "$ref": "#/components/schemas/Actor"
+          },
+          "causationId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The persisted command ID that caused this callback; use the same ID on every retry."
+          },
+          "eventType": {
+            "type": "string",
+            "enum": [
+              "lender.cancellation.acknowledged"
+            ]
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "cancellationId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "cancellationAcknowledgementStatus": {
+                "type": "string",
+                "enum": [
+                  "ACKNOWLEDGED"
+                ]
+              }
+            },
+            "required": [
+              "cancellationAcknowledgementStatus"
+            ]
+          }
+        },
+        "required": [
+          "eventId",
+          "lenderSequence",
+          "applicationId",
+          "submissionId",
+          "applicationRevision",
+          "lenderId",
+          "lenderApplicationId",
+          "occurredAt",
+          "eventType",
+          "data"
+        ]
+      },
+      "LenderCallback": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/InformationRequestedCallback"
+          },
+          {
+            "$ref": "#/components/schemas/InformationAnsweredCallback"
+          },
+          {
+            "$ref": "#/components/schemas/DecisionCallback"
+          },
+          {
+            "$ref": "#/components/schemas/OfferCreatedCallback"
+          },
+          {
+            "$ref": "#/components/schemas/OfferAcknowledgedCallback"
+          },
+          {
+            "$ref": "#/components/schemas/OfferWithdrawnCallback"
+          },
+          {
+            "$ref": "#/components/schemas/CancellationAcknowledgedCallback"
+          }
+        ],
+        "discriminator": {
+          "propertyName": "eventType",
+          "mapping": {
+            "lender.information.requested": "#/components/schemas/InformationRequestedCallback",
+            "lender.information.answered": "#/components/schemas/InformationAnsweredCallback",
+            "lender.decision.received": "#/components/schemas/DecisionCallback",
+            "loan.offer.created": "#/components/schemas/OfferCreatedCallback",
+            "loan.offer.acknowledged": "#/components/schemas/OfferAcknowledgedCallback",
+            "loan.offer.withdrawn": "#/components/schemas/OfferWithdrawnCallback",
+            "lender.cancellation.acknowledged": "#/components/schemas/CancellationAcknowledgedCallback"
+          }
+        },
+        "description": "Create eventId once and reuse the complete body on retry. lenderSequence increases by one per submission. Binding and trusted command origin are checked before persistence. Callback data cannot override the authenticated lender identity."
+      },
+      "BankASubmission": {
+        "type": "object",
+        "properties": {
+          "lenderId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "applicationRevision": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          },
+          "productId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "eligibilityResultId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "verificationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sellerSubject": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Optional legacy authenticated subject reference; never fabricate one from a trusted sellerId."
+          },
+          "originActor": {
+            "$ref": "#/components/schemas/Actor"
+          },
+          "correlationId": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "causationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "submissionReference": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "applicationReference": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sellerReference": {
+            "type": "string",
+            "minLength": 1
+          },
+          "registeredBusinessName": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255
+          },
+          "requestedFacility": {
+            "type": "string",
+            "pattern": "^[0-9]{1,17}\\.[0-9]{2}$",
+            "example": "100000.00",
+            "description": "Decimal string with exactly two fractional digits; positive for requested/offered amounts and nonnegative for fees."
+          },
+          "currency": {
+            "type": "string",
+            "enum": [
+              "INR"
+            ]
+          },
+          "facilityPurpose": {
+            "type": "string",
+            "minLength": 1,
+            "enum": [
+              "PURCHASE_INVENTORY",
+              "WORKING_CAPITAL",
+              "BUSINESS_EXPANSION"
+            ]
+          },
+          "financialSnapshotReference": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "consentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "consentVersion": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          }
+        },
+        "required": [
+          "lenderId",
+          "applicationRevision",
+          "productId",
+          "eligibilityResultId",
+          "verificationId",
+          "originActor",
+          "submissionReference",
+          "applicationReference",
+          "sellerReference",
+          "registeredBusinessName",
+          "requestedFacility",
+          "currency",
+          "facilityPurpose",
+          "financialSnapshotReference",
+          "consentId",
+          "consentVersion"
+        ]
+      },
+      "NbfcBSubmission": {
+        "type": "object",
+        "properties": {
+          "lenderId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "applicationRevision": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          },
+          "productId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "eligibilityResultId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "verificationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sellerSubject": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Optional legacy authenticated subject reference; never fabricate one from a trusted sellerId."
+          },
+          "originActor": {
+            "$ref": "#/components/schemas/Actor"
+          },
+          "correlationId": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "causationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "caseReference": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "credflowApplicationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "merchantCode": {
+            "type": "string",
+            "minLength": 1
+          },
+          "legalName": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255
+          },
+          "requestedLimit": {
+            "type": "string",
+            "pattern": "^[0-9]{1,17}\\.[0-9]{2}$",
+            "example": "100000.00",
+            "description": "Decimal string with exactly two fractional digits; positive for requested/offered amounts and nonnegative for fees."
+          },
+          "currencyCode": {
+            "type": "string",
+            "enum": [
+              "INR"
+            ]
+          },
+          "facilityCode": {
+            "type": "string",
+            "minLength": 1,
+            "enum": [
+              "PURCHASE_INVENTORY",
+              "WORKING_CAPITAL",
+              "BUSINESS_EXPANSION"
+            ]
+          },
+          "financialDataReference": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "consentReference": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "consentRevision": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          }
+        },
+        "required": [
+          "lenderId",
+          "applicationRevision",
+          "productId",
+          "eligibilityResultId",
+          "verificationId",
+          "originActor",
+          "caseReference",
+          "credflowApplicationId",
+          "merchantCode",
+          "legalName",
+          "requestedLimit",
+          "currencyCode",
+          "facilityCode",
+          "financialDataReference",
+          "consentReference",
+          "consentRevision"
+        ]
+      },
+      "BankAReceipt": {
+        "type": "object",
+        "properties": {
+          "bankApplicationId": {
+            "type": "string",
+            "example": "BA-33333333-3333-4333-8333-333333333333"
+          },
+          "submissionReference": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "processingState": {
+            "type": "string",
+            "enum": [
+              "SUBMITTED"
+            ]
+          },
+          "acceptedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "bankApplicationId",
+          "submissionReference",
+          "processingState",
+          "acceptedAt"
+        ]
+      },
+      "NbfcBReceipt": {
+        "type": "object",
+        "properties": {
+          "caseId": {
+            "type": "string",
+            "example": "NB-33333333-3333-4333-8333-333333333333"
+          },
+          "caseReference": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "statusCode": {
+            "type": "string",
+            "enum": [
+              "RECEIVED"
+            ]
+          },
+          "receivedTime": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "caseId",
+          "caseReference",
+          "statusCode",
+          "receivedTime"
+        ]
+      },
+      "ReferenceCancellation": {
+        "type": "object",
+        "properties": {
+          "cancellationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "originActor": {
+            "$ref": "#/components/schemas/Actor"
+          },
+          "causationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "correlationId": {
+            "type": "string",
+            "maxLength": 100
+          }
+        },
+        "required": []
+      },
+      "ReferenceCancelled": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "CANCELLED"
+            ]
+          },
+          "submissionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "lenderId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "status",
+          "submissionId",
+          "lenderId"
+        ]
+      },
+      "SimulatorCommandAccepted": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "ACCEPTED"
+            ]
+          },
+          "commandId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "status",
+          "commandId"
+        ]
+      },
+      "SimulatorCallbackReplay": {
+        "type": "object",
+        "properties": {
+          "eventId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING"
+            ]
+          }
+        },
+        "required": [
+          "eventId",
+          "status"
+        ]
+      },
+      "SimulatorOffer": {
+        "type": "object",
+        "properties": {
+          "offerId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "offeredAmount": {
+            "type": "string",
+            "pattern": "^[0-9]{1,17}\\.[0-9]{2}$",
+            "example": "100000.00",
+            "description": "Decimal string with exactly two fractional digits; positive for requested/offered amounts and nonnegative for fees."
+          },
+          "currency": {
+            "type": "string",
+            "enum": [
+              "INR"
+            ]
+          },
+          "annualInterestRatePercent": {
+            "type": "string",
+            "pattern": "^[0-9]{1,3}(\\.[0-9]{1,4})?$",
+            "description": "Decimal string in the inclusive range 0..100."
+          },
+          "interestRateType": {
+            "type": "string",
+            "enum": [
+              "FIXED"
+            ]
+          },
+          "tenureMonths": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1,
+            "maximum": 120
+          },
+          "repaymentFrequency": {
+            "type": "string",
+            "enum": [
+              "MONTHLY"
+            ]
+          },
+          "feesAmount": {
+            "type": "string",
+            "pattern": "^[0-9]{1,17}\\.[0-9]{2}$",
+            "example": "100000.00",
+            "description": "Decimal string with exactly two fractional digits; positive for requested/offered amounts and nonnegative for fees."
+          },
+          "termsReference": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Must be in the future when a new command is first persisted; replay retains the original request."
+          },
+          "version": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ACTIVE",
+              "ACCEPTED",
+              "DECLINED",
+              "WITHDRAWN"
+            ]
+          }
+        },
+        "required": [
+          "offerId",
+          "offeredAmount",
+          "currency",
+          "annualInterestRatePercent",
+          "interestRateType",
+          "tenureMonths",
+          "repaymentFrequency",
+          "feesAmount",
+          "termsReference",
+          "expiresAt",
+          "status",
+          "version"
+        ]
+      },
+      "SimulatorState": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string"
+          },
+          "lenderApplicationId": {
+            "type": "string"
+          },
+          "request": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "decisions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DecisionCommand"
+            }
+          },
+          "informationRequests": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/InformationRequestCommand"
+            }
+          },
+          "answers": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/AnswerInformationCommand"
+            }
+          },
+          "offers": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/SimulatorOffer"
+            }
+          },
+          "commands": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string",
+              "description": "Stored command business payload hash."
+            }
+          }
+        },
+        "required": [
+          "status",
+          "lenderApplicationId",
+          "request"
+        ],
+        "description": "Persisted simulator state for a single lender application. request includes normalized fields plus original lender wire fields; collection maps are created lazily."
+      },
+      "DecisionEnvelope": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "DECISION"
+            ]
+          },
+          "data": {
+            "$ref": "#/components/schemas/DecisionCommand"
+          },
+          "originActor": {
+            "$ref": "#/components/schemas/Actor"
+          }
+        },
+        "required": [
+          "type",
+          "data"
+        ]
+      },
+      "InformationRequestEnvelope": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "REQUEST_INFORMATION"
+            ]
+          },
+          "data": {
+            "$ref": "#/components/schemas/InformationRequestCommand"
+          },
+          "originActor": {
+            "$ref": "#/components/schemas/Actor"
+          }
+        },
+        "required": [
+          "type",
+          "data"
+        ]
+      },
+      "InformationAnswerEnvelope": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "ANSWER_INFORMATION"
+            ]
+          },
+          "data": {
+            "$ref": "#/components/schemas/AnswerInformationCommand"
+          },
+          "originActor": {
+            "$ref": "#/components/schemas/Actor"
+          }
+        },
+        "required": [
+          "type",
+          "data"
+        ]
+      },
+      "OfferEnvelope": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "CREATE_OFFER"
+            ]
+          },
+          "data": {
+            "$ref": "#/components/schemas/OfferTerms"
+          },
+          "originActor": {
+            "$ref": "#/components/schemas/Actor"
+          }
+        },
+        "required": [
+          "type",
+          "data"
+        ]
+      },
+      "OfferWithdrawalEnvelope": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "WITHDRAW_OFFER"
+            ]
+          },
+          "data": {
+            "$ref": "#/components/schemas/WithdrawOfferCommand"
+          },
+          "originActor": {
+            "$ref": "#/components/schemas/Actor"
+          }
+        },
+        "required": [
+          "type",
+          "data"
+        ]
+      },
+      "OfferAcceptanceEnvelope": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "ACCEPT_OFFER"
+            ]
+          },
+          "data": {
+            "$ref": "#/components/schemas/AcceptOfferCommand"
+          },
+          "originActor": {
+            "$ref": "#/components/schemas/Actor"
+          }
+        },
+        "required": [
+          "type",
+          "data"
+        ]
+      },
+      "OfferDeclineEnvelope": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "DECLINE_OFFER"
+            ]
+          },
+          "data": {
+            "$ref": "#/components/schemas/DeclineOfferCommand"
+          },
+          "originActor": {
+            "$ref": "#/components/schemas/Actor"
+          }
+        },
+        "required": [
+          "type",
+          "data"
+        ]
+      },
+      "CancellationEnvelope": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "CANCEL"
+            ]
+          },
+          "data": {
+            "$ref": "#/components/schemas/CancellationCommand"
+          },
+          "originActor": {
+            "$ref": "#/components/schemas/Actor"
+          }
+        },
+        "required": [
+          "type",
+          "data"
+        ]
+      },
+      "SimulatorCommand": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/DecisionEnvelope"
+          },
+          {
+            "$ref": "#/components/schemas/InformationRequestEnvelope"
+          },
+          {
+            "$ref": "#/components/schemas/InformationAnswerEnvelope"
+          },
+          {
+            "$ref": "#/components/schemas/OfferEnvelope"
+          },
+          {
+            "$ref": "#/components/schemas/OfferWithdrawalEnvelope"
+          },
+          {
+            "$ref": "#/components/schemas/OfferAcceptanceEnvelope"
+          },
+          {
+            "$ref": "#/components/schemas/OfferDeclineEnvelope"
+          },
+          {
+            "$ref": "#/components/schemas/CancellationEnvelope"
+          }
+        ],
+        "discriminator": {
+          "propertyName": "type",
+          "mapping": {
+            "DECISION": "#/components/schemas/DecisionEnvelope",
+            "REQUEST_INFORMATION": "#/components/schemas/InformationRequestEnvelope",
+            "ANSWER_INFORMATION": "#/components/schemas/InformationAnswerEnvelope",
+            "CREATE_OFFER": "#/components/schemas/OfferEnvelope",
+            "WITHDRAW_OFFER": "#/components/schemas/OfferWithdrawalEnvelope",
+            "ACCEPT_OFFER": "#/components/schemas/OfferAcceptanceEnvelope",
+            "DECLINE_OFFER": "#/components/schemas/OfferDeclineEnvelope",
+            "CANCEL": "#/components/schemas/CancellationEnvelope"
+          }
+        },
+        "description": "All commands use a caller-generated commandId path UUID for persistent idempotency. Keep type, data and originActor unchanged on retries."
+      }
+    },
+    "responses": {
+      "Error400": {
+        "description": "Invalid input, header, pagination or unsupported operation.",
+        "headers": {
+          "X-Correlation-ID": {
+            "description": "Trace ID for this request.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "Error401": {
+        "description": "Missing, expired or invalid JWT, issuer or service audience.",
+        "headers": {
+          "X-Correlation-ID": {
+            "description": "Trace ID for this request.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "Error403": {
+        "description": "Missing role, scope or trusted system client.",
+        "headers": {
+          "X-Correlation-ID": {
+            "description": "Trace ID for this request.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "Error404": {
+        "description": "Resource absent or concealed because the authenticated caller does not own it.",
+        "headers": {
+          "X-Correlation-ID": {
+            "description": "Trace ID for this request.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "Error409": {
+        "description": "Business state, optimistic version, duplicate reference or idempotency conflict.",
+        "headers": {
+          "X-Correlation-ID": {
+            "description": "Trace ID for this request.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "Error503": {
+        "description": "Required dependency unavailable.",
+        "headers": {
+          "X-Correlation-ID": {
+            "description": "Trace ID for this request.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      }
+    },
+    "parameters": {
+      "CorrelationId": {
+        "name": "X-Correlation-ID",
+        "in": "header",
+        "required": false,
+        "description": "Preserved across trusted service calls and events; response always exposes X-Correlation-ID. Invalid public header values are replaced with a generated ID.",
+        "schema": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9._:-]{1,100}$"
+        }
+      },
+      "IdempotencyKey": {
+        "name": "Idempotency-Key",
+        "in": "header",
+        "required": true,
+        "description": "Use the same key and identical request to retry. Reusing it with changed content returns 409. Human API keys are scoped to the authenticated subject, operation and resource.",
+        "schema": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        }
+      },
+      "CommandKey": {
+        "name": "Idempotency-Key",
+        "in": "header",
+        "required": true,
+        "description": "Caller-generated UUID command ID; persisted across retries. Reuse for a different submission, operation or business payload returns 409.",
+        "schema": {
+          "type": "string",
+          "format": "uuid"
+        }
+      }
+    }
+  }
+}

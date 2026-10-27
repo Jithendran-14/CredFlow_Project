@@ -1,0 +1,23 @@
+{
+  "applicationRevision": 1,
+  "lenderId": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb1",
+  "productId": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1",
+  "eligibilityResultId": "ca4fe04d-ca50-5bd7-89a7-645c4309e180",
+  "verificationId": "f2e0a9b4-794d-5340-9b34-5a1fd1153469",
+  "sellerSubject": "seller-demo-104",
+  "originActor": {
+    "type": "HUMAN",
+    "subject": "seller-demo-104"
+  },
+  "correlationId": "demo-flow-bank-a-104",
+  "submissionReference": "147ef5e6-266b-5f82-bbf5-a34183361fc4",
+  "applicationReference": "52de19d2-1bea-5fd3-9685-868e1a7207b7",
+  "sellerReference": "SELLER-104",
+  "registeredBusinessName": "Demo Clothing",
+  "requestedFacility": "500000.00",
+  "currency": "INR",
+  "facilityPurpose": "PURCHASE_INVENTORY",
+  "financialSnapshotReference": "2aa93b3c-cc29-5f3d-a246-59b046868c87",
+  "consentId": "cde7715d-fd28-5620-b755-d01d014968bc",
+  "consentVersion": 1
+}

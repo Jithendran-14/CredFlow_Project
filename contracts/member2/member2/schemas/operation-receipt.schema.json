@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "DRAFT Queued command receipt v1",
+  "description": "Proposal for team review. No corresponding business HTTP endpoint or event producer is implemented yet.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "operationId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "status": {
+      "const": "PENDING"
+    },
+    "statusUrl": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "required": [
+    "operationId",
+    "status",
+    "statusUrl"
+  ]
+}

@@ -1,0 +1,84 @@
+server:
+  port: ${SERVER_PORT:8080}
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      server:
+        webflux:
+          routes:
+            - id: member2-ui
+              uri: ${ELIGIBILITY_URL:http://localhost:8083}
+              predicates:
+                - Path=/member2/**
+            - id: auth-login
+              uri: ${AUTH_URL:http://localhost:8085}
+              predicates:
+                - Path=/api/v1/auth/login
+            - id: consent
+              uri: ${CONSENT_URL:http://localhost:8082}
+              predicates:
+                - Path=/api/v1/applications/*/consents/**,/api/v1/applications/*/consents,/api/v1/applications/*/financial-consents/**,/api/v1/applications/*/financial-consents,/api/v1/applications/*/verification
+            - id: eligibility
+              uri: ${ELIGIBILITY_URL:http://localhost:8083}
+              predicates:
+                - Path=/api/v1/applications/*/eligibility,/api/v1/lender-products/**
+            - id: orchestration
+              uri: ${ORCHESTRATION_URL:http://localhost:8084}
+              predicates:
+                - Path=/api/v1/submissions,/api/v1/submissions/*,/api/v1/applications/*/information-requests,/api/v1/information-requests/**,/api/v1/applications/*/offers,/api/v1/offers/**,/api/v1/applications/*/cancellation,/api/v1/applications/*/financial-refresh,/api/v1/applications/*/workflow,/api/v1/operations/**
+            - id: integration
+              uri: ${INTEGRATION_URL:http://localhost:8087}
+              predicates:
+                - Path=/api/v1/lenders/**,/api/v1/submissions/*/decisions,/api/v1/submissions/*/information-requests,/api/v1/submissions/*/offers,/api/v1/submissions/*/offer-withdrawals
+            - id: audit
+              uri: ${AUDIT_URL:http://localhost:8086}
+              predicates:
+                - Path=/api/v1/applications/*/audit
+            - id: application
+              uri: ${APPLICATION_URL:http://localhost:8081}
+              predicates:
+                - Path=/api/v1/applications/**,/api/v1/applications
+            - id: info-application-service
+              uri: ${APPLICATION_URL:http://localhost:8081}
+              predicates:
+                - Path=/api/v1/system/application-service/info
+            - id: info-consent-verification-service
+              uri: ${CONSENT_URL:http://localhost:8082}
+              predicates:
+                - Path=/api/v1/system/consent-verification-service/info
+            - id: info-eligibility-service
+              uri: ${ELIGIBILITY_URL:http://localhost:8083}
+              predicates:
+                - Path=/api/v1/system/eligibility-service/info
+            - id: info-orchestration-service
+              uri: ${ORCHESTRATION_URL:http://localhost:8084}
+              predicates:
+                - Path=/api/v1/system/orchestration-service/info
+            - id: info-lender-integration-service
+              uri: ${INTEGRATION_URL:http://localhost:8087}
+              predicates:
+                - Path=/api/v1/system/lender-integration-service/info
+            - id: info-audit-service
+              uri: ${AUDIT_URL:http://localhost:8086}
+              predicates:
+                - Path=/api/v1/system/audit-service/info
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      probes:
+        enabled: true
+logging:
+  structured:
+    format:
+      console: logstash
+credflow:
+  security:
+    issuer: ${JWT_ISSUER:credflow-auth}
+    audience: ${JWT_AUDIENCE:credflow-api}
+    public-key-location: ${JWT_PUBLIC_KEY_PATH:}

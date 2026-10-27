@@ -1,0 +1,42 @@
+{
+  "eligibilityResultId": "99999999-9999-4999-8999-999999999999",
+  "evaluationRequestId": "66666666-6666-4666-8666-666666666666",
+  "applicationId": "33333333-3333-4333-8333-333333333333",
+  "applicationRevision": 1,
+  "verificationId": "77777777-7777-4777-8777-777777777777",
+  "financialSnapshotId": "88888888-8888-4888-8888-888888888888",
+  "calculationVersion": "1.0",
+  "evaluatedAt": "2026-10-15T09:30:00Z",
+  "asOfDate": "2026-10-13",
+  "requestedAmount": "500000.00",
+  "currency": "INR",
+  "outcome": "EVALUATED",
+  "reasonCodes": [],
+  "averageMonthlyNetSales": "550000.00",
+  "averageMonthlyPayout": "530000.00",
+  "returnRatePercent": "8.33",
+  "lenderResults": [
+    {
+      "lenderId": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb1",
+      "productId": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1",
+      "ruleVersion": "1",
+      "indicativeMaxAmount": "550000.00",
+      "eligible": false,
+      "reasonCodes": [
+        "PURPOSE_NOT_SUPPORTED"
+      ],
+      "routingPriority": 1
+    },
+    {
+      "lenderId": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb2",
+      "productId": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa2",
+      "ruleVersion": "1",
+      "indicativeMaxAmount": "550000.00",
+      "eligible": false,
+      "reasonCodes": [
+        "PURPOSE_NOT_SUPPORTED"
+      ],
+      "routingPriority": 2
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "verificationRequestId": "55555555-5555-4555-8555-555555555555",
+  "applicationId": "33333333-3333-4333-8333-333333333333",
+  "applicationRevision": 1,
+  "fixtureIdentityId": "DEMO-ACTION-001",
+  "providerReference": "mock-verification-55555555-5555-4555-8555-555555555555",
+  "status": "ACTION_REQUIRED",
+  "message": "Fictional provider response for this demonstration.",
+  "checkedAt": "2026-10-15T09:00:00Z",
+  "reasonCode": "IDENTITY_ACTION_REQUIRED"
+}

@@ -1,0 +1,28 @@
+{
+  "eventId": "28d3c351-d7cc-5e70-9888-628dad905d34",
+  "eventType": "loan.offer.declined",
+  "schemaVersion": "1.0",
+  "occurredAt": "2026-10-16T09:00:00Z",
+  "producer": "orchestration-service",
+  "applicationId": "52de19d2-1bea-5fd3-9685-868e1a7207b7",
+  "aggregateVersion": 1,
+  "correlationId": "demo-flow-bank-a-104",
+  "data": {
+    "offerId": "5c149b12-3116-5cd5-bb69-71e241f95f0f",
+    "submissionId": "147ef5e6-266b-5f82-bbf5-a34183361fc4",
+    "applicationRevision": 1,
+    "lenderId": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb1",
+    "operationAt": "2026-10-16T09:00:00Z",
+    "expectedOfferVersion": 0,
+    "lenderAcknowledgementStatus": "PENDING",
+    "declineId": "7c626ea8-650d-5d7e-8ce3-b0c306542476"
+  },
+  "actor": {
+    "type": "HUMAN",
+    "subject": "seller-demo-104"
+  },
+  "originActor": {
+    "type": "HUMAN",
+    "subject": "seller-demo-104"
+  }
+}

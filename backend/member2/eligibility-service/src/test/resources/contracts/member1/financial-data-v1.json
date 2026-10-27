@@ -1,0 +1,53 @@
+{
+  "applicationId": "6074143c-1d49-469e-bfac-7de127685e83",
+  "sellerId": "SELLER-1001",
+  "applicationRevision": 1,
+  "verificationId": "13c8a91d-cb73-45e1-87c7-78c99b824a12",
+  "financialDataReference": "FIN-DATA-0001",
+  "financialDataVersion": 1,
+  "consent": {
+    "status": "ACTIVE",
+    "consentId": "CONSENT-DEMO-001",
+    "scope": "FINANCIAL_DATA_FOR_LOAN_ELIGIBILITY",
+    "authorisedAt": "2026-10-15T09:00:00Z",
+    "expiresAt": "2026-11-15T09:00:00Z"
+  },
+  "financialData": {
+    "currency": "INR",
+    "periodMonths": 3,
+    "excludesCurrentMonth": true,
+    "monthlyMetrics": [
+      {
+        "month": "2026-07",
+        "dataStatus": "AVAILABLE",
+        "sales": "450000.00",
+        "returns": "20000.00",
+        "payouts": "390000.00",
+        "orderCount": 220,
+        "returnedOrderCount": 12
+      },
+      {
+        "month": "2026-08",
+        "dataStatus": "AVAILABLE",
+        "sales": "0.00",
+        "returns": "0.00",
+        "payouts": "0.00",
+        "orderCount": 0,
+        "returnedOrderCount": 0
+      },
+      {
+        "month": "2026-09",
+        "dataStatus": "MISSING",
+        "sales": null,
+        "returns": null,
+        "payouts": null,
+        "orderCount": null,
+        "returnedOrderCount": null
+      }
+    ]
+  },
+  "source": {
+    "provider": "CREDFLOW_VERIFICATION_MOCK",
+    "retrievedAt": "2026-10-15T09:05:00Z"
+  }
+}

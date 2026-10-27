@@ -1,0 +1,13 @@
+server.address=127.0.0.1
+spring.datasource.url=jdbc:oracle:thin:@//localhost:1521/FREEPDB1
+spring.datasource.username=CF_ELIGIBILITY
+spring.datasource.password=CHANGE_ME
+spring.jpa.hibernate.ddl-auto=validate
+spring.sql.init.mode=never
+spring.kafka.bootstrap-servers=127.0.0.1:9092
+credflow.security.issuer=credflow-auth
+credflow.security.audience=credflow-api
+credflow.security.public-key-location=C:/credflow/CredFlow/backend/runtime/private/auth-public.pem
+credflow.eligibility.worker-enabled=true
+credflow.eligibility.publisher-enabled=true
+credflow.clients.client-secret=CHANGE_ME

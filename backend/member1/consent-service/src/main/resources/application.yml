@@ -1,0 +1,96 @@
+server:
+  port: 8082
+
+spring:
+  application:
+    name: consent-service
+
+  datasource:
+    url: jdbc:oracle:thin:@//localhost:1521/FREEPDB1
+    username: CF_CONSENT
+    password: ${CREDFLOW_CONSENT_DB_PASSWORD}
+    driver-class-name: oracle.jdbc.OracleDriver
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+
+  kafka:
+    bootstrap-servers: 127.0.0.1:9092
+    listener:
+      auto-startup: false
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      acks: all    
+      retries: 3
+      properties:
+        enable.idempotence: true
+        max.in.flight.requests.per.connection: 1
+        max.block.ms: 5000
+        request.timeout.ms: 10000
+        delivery.timeout.ms: 20000
+        linger.ms: 0
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never
+credflow:
+   jwt:
+     issuer: credflow-auth
+     audience: credflow-api
+     public-key-path: ${CREDFLOW_PUBLIC_KEY_PATH}
+   clients:
+     auth:
+       token-url: http://localhost:8085/oauth2/token
+       client-id: consent-verification-service
+       client-secret: ${CREDFLOW_VERIFICATION_CLIENT_SECRET}
+     application:
+       base-url: http://localhost:8081
+     orchestration:
+       base-url: http://localhost:8084
+     identity:
+       base-url: http://localhost:8090
+   consent:
+     notice-version: v1
+     allowed-lender-ids:
+          - bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb1
+          - bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb2
+          - bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb3
+   consent-delivery:
+     enabled: false
+     fixed-delay-ms: 5000
+   verification-precheck:
+     enabled: true
+     fixed-delay-ms: 5000
+   identity-processing:
+     enabled: false
+     fixed-delay-ms: 5000
+   identity-preparation:
+     enabled: true
+     fixed-delay-ms: 5000
+   verification-finalization:
+     enabled: true
+     fixed-delay-ms: 5000
+     retrieval-authorised-client-id: eligibility-service
+     retrieval-ttl-seconds: 3600
+   outbox:
+     enabled: true
+     fixed-delay-ms: 5000
+   financial-consent:
+     notice-version: v1
+     validity-seconds: 86400
+   financial:
+     source-provider: member2-financial-mock
+     provider-url: ${CREDFLOW_FINANCIAL_PROVIDER_URL:}
+   verification-failure:
+     publish-without-fixture: false 

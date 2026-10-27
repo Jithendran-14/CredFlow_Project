@@ -1,0 +1,267 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://credflow.local/contracts/events/application.revised.schema.json",
+  "title": "application.revised",
+  "type": "object",
+  "properties": {
+    "eventId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "eventType": {
+      "const": "application.revised"
+    },
+    "schemaVersion": {
+      "const": "1.0"
+    },
+    "occurredAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "producer": {
+      "const": "application-service"
+    },
+    "applicationId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "aggregateVersion": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "correlationId": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9._:-]{1,100}$"
+    },
+    "causationId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "data": {
+      "type": "object",
+      "properties": {
+        "sellerId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "sellerSubject": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 255
+        },
+        "marketplaceId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "marketplaceSellerId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "applicationRevision": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "requestedAmount": {
+          "type": "string",
+          "pattern": "^[0-9]{1,17}\\.[0-9]{2}$",
+          "not": {
+            "pattern": "^0+\\.00$"
+          }
+        },
+        "currency": {
+          "const": "INR"
+        },
+        "loanPurpose": {
+          "enum": [
+            "PURCHASE_INVENTORY",
+            "WORKING_CAPITAL",
+            "BUSINESS_EXPANSION"
+          ]
+        },
+        "businessProfile": {
+          "type": "object",
+          "properties": {
+            "displayName": {
+              "type": "string",
+              "minLength": 1
+            },
+            "businessName": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 255
+            },
+            "registeredBusinessName": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 255
+            },
+            "businessStartDate": {
+              "type": "string",
+              "format": "date"
+            },
+            "contactEmail": {
+              "type": "string",
+              "format": "email"
+            },
+            "fixtureIdentityId": {
+              "type": "string",
+              "minLength": 1
+            },
+            "phase0": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "required": [
+                    "preferredTenureMonths",
+                    "declaredMonthlyIncome",
+                    "monthlyExpenses",
+                    "existingMonthlyDebt",
+                    "dateOfBirth",
+                    "documentType",
+                    "documentReference",
+                    "detailsConfirmed",
+                    "kycTermsAccepted"
+                  ],
+                  "properties": {
+                    "preferredTenureMonths": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 120
+                    },
+                    "declaredMonthlyIncome": {
+                      "type": "string",
+                      "pattern": "^[0-9]{1,12}\\.[0-9]{2}$"
+                    },
+                    "monthlyExpenses": {
+                      "type": "string",
+                      "pattern": "^[0-9]{1,12}\\.[0-9]{2}$"
+                    },
+                    "existingMonthlyDebt": {
+                      "type": "string",
+                      "pattern": "^[0-9]{1,12}\\.[0-9]{2}$"
+                    },
+                    "dateOfBirth": {
+                      "type": "string",
+                      "format": "date"
+                    },
+                    "documentType": {
+                      "const": "MOCK_ID"
+                    },
+                    "documentReference": {
+                      "type": "string",
+                      "pattern": "^TEST-[A-Z0-9-]{6,40}$"
+                    },
+                    "detailsConfirmed": {
+                      "const": true
+                    },
+                    "kycTermsAccepted": {
+                      "const": true
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "businessName"
+          ],
+          "additionalProperties": true
+        },
+        "sellerRequestReference": {
+          "type": "string",
+          "minLength": 1
+        },
+        "status": {
+          "const": "DRAFT"
+        },
+        "operationId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "previousRevision": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "required": [
+        "operationId",
+        "applicationRevision",
+        "requestedAmount",
+        "currency",
+        "loanPurpose",
+        "businessProfile"
+      ],
+      "additionalProperties": false
+    },
+    "actor": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "enum": [
+            "HUMAN",
+            "SYSTEM",
+            "SYSTEM_CLIENT"
+          ]
+        },
+        "subject": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 255
+        },
+        "organisationId": {
+          "type": "string",
+          "format": "uuid"
+        }
+      },
+      "required": [
+        "type",
+        "subject"
+      ],
+      "additionalProperties": false
+    },
+    "originActor": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "enum": [
+            "HUMAN",
+            "SYSTEM",
+            "SYSTEM_CLIENT"
+          ]
+        },
+        "subject": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 255
+        },
+        "organisationId": {
+          "type": "string",
+          "format": "uuid"
+        }
+      },
+      "required": [
+        "type",
+        "subject"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "eventId",
+    "eventType",
+    "schemaVersion",
+    "occurredAt",
+    "producer",
+    "applicationId",
+    "aggregateVersion",
+    "correlationId",
+    "data",
+    "actor"
+  ],
+  "additionalProperties": false
+}

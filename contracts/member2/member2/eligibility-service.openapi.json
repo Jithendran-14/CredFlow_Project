@@ -1,0 +1,215 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Eligibility implemented component APIs",
+    "version": "1.0.0",
+    "description": "Implemented durable evaluation intake, live authenticated Application/Consent adapters, Oracle calculation worker, completion outbox and seller-owned current result reads. Manual SQL and JPA. Custom RS256 JWT."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8083"
+    }
+  ],
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "paths": {
+    "/api/v1/system/eligibility-service/info": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Authenticated foundation metadata"
+          },
+          "401": {
+            "description": "Authentication required"
+          }
+        }
+      }
+    },
+    "/actuator/health": {
+      "get": {
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Healthy"
+          },
+          "503": {
+            "description": "Unhealthy"
+          }
+        }
+      }
+    },
+    "/internal/v1/eligibility/evaluations": {
+      "post": {
+        "summary": "Queue an eligibility evaluation",
+        "description": "Exact orchestration-service JWT client identity and eligibility.evaluate scope required. Idempotency-Key must equal evaluationRequestId. A committed 202 receipt is processed asynchronously by the enabled worker. Exact retries reuse the same operation; changed inputs return 409.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "../drafts/member2/schemas/evaluation-request.schema.json"
+              },
+              "example": {
+                "evaluationRequestId": "66666666-6666-4666-8666-666666666666",
+                "applicationId": "33333333-3333-4333-8333-333333333333",
+                "applicationRevision": 1,
+                "verificationId": "77777777-7777-4777-8777-777777777777",
+                "asOfDate": "2026-10-13",
+                "authorisedRetrievalReference": "88888888-8888-4888-8888-888888888888"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Stored in Oracle as PENDING; does not mean identity/financial checks completed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "../drafts/member2/schemas/operation-receipt.schema.json"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "../drafts/member2/schemas/error.schema.json"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "description": "Caller is not permitted"
+          },
+          "409": {
+            "description": "Conflicting request or state",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "../drafts/member2/schemas/error.schema.json"
+                }
+              }
+            }
+          }
+        },
+        "x-implementation-status": "IMPLEMENTED_INTAKE_ONLY",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Must equal evaluationRequestId."
+          }
+        ]
+      }
+    },
+    "/api/v1/operations/{operationId}": {
+      "get": {
+        "summary": "Read a durable Eligibility operation",
+        "description": "Machine-only: designated Orchestration client plus configured evaluation scope. No seller status access is implemented. Returns safe metadata; never returns the retrieval reference. Current operations stay PENDING until the real worker is connected.",
+        "x-implementation-status": "IMPLEMENTED_MACHINE_READ",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "operationId",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Current operation record",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "../drafts/member2/schemas/operation-status.schema.json"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Malformed operation ID"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Dedicated client/scope not authorised"
+          },
+          "404": {
+            "description": "Operation missing or inaccessible"
+          }
+        }
+      }
+    },
+    "/api/v1/applications/{applicationId}/eligibility": {
+      "get": {
+        "summary": "Read the logged-in seller\u2019s current eligibility result",
+        "description": "SELLER role and sellerId claim required. Application verifies ownership; Orchestration selects the current result/evaluation/verification; Application revision is rechecked. Unavailable checks fail closed. Successful replies use Cache-Control no-store.",
+        "parameters": [
+          {
+            "name": "applicationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Current result, or BLOCKED workflow state with a message"
+          },
+          "202": {
+            "description": "Assessment pending or seller consent required"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Wrong role or missing seller identity"
+          },
+          "404": {
+            "description": "Application unavailable to this seller"
+          },
+          "409": {
+            "description": "Current result/revision does not match"
+          },
+          "502": {
+            "description": "Invalid workflow result reference"
+          },
+          "503": {
+            "description": "Connected service unavailable"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {}
+  }
+}

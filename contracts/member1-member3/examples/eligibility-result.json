@@ -1,0 +1,29 @@
+{
+  "eligibilityResultId": "ca4fe04d-ca50-5bd7-89a7-645c4309e180",
+  "applicationRevision": 1,
+  "verificationId": "f2e0a9b4-794d-5340-9b34-5a1fd1153469",
+  "financialSnapshotId": "2aa93b3c-cc29-5f3d-a246-59b046868c87",
+  "evaluationRequestId": "45345dea-8054-5f80-ac97-7d471d9c88b8",
+  "calculationVersion": "1.0",
+  "evaluatedAt": "2026-10-16T09:00:00Z",
+  "outcome": "EVALUATED",
+  "reasonCodes": [],
+  "lenderResults": [
+    {
+      "lenderId": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb1",
+      "productId": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1",
+      "ruleVersion": "bank-a-v1",
+      "indicativeMaxAmount": "650000.00",
+      "eligible": true,
+      "reasonCodes": [],
+      "routingPriority": 1
+    }
+  ],
+  "applicationId": "52de19d2-1bea-5fd3-9685-868e1a7207b7",
+  "asOfDate": "2026-10-13",
+  "requestedAmount": "500000.00",
+  "currency": "INR",
+  "averageMonthlyNetSales": "550000.00",
+  "averageMonthlyPayout": "530000.00",
+  "returnRatePercent": "8.33"
+}

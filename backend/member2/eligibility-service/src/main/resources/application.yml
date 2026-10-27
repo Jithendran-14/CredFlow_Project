@@ -1,0 +1,61 @@
+server:
+  port: ${SERVER_PORT:8083}
+spring:
+  application:
+    name: eligibility-service
+  datasource:
+    url: ${ORACLE_JDBC_URL:jdbc:oracle:thin:@localhost:1521/FREEPDB1}
+    username: CF_ELIGIBILITY
+    password: ${CF_ELIGIBILITY_PASSWORD}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+  sql:
+    init:
+      mode: never
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    consumer:
+      group-id: eligibility-service
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    producer:
+      acks: all
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      properties:
+        enable.idempotence: true
+credflow:
+  eligibility:
+    worker-enabled: ${ELIGIBILITY_WORKER_ENABLED:false}
+    publisher-enabled: ${ELIGIBILITY_PUBLISHER_ENABLED:false}
+    caller-client: ${ELIGIBILITY_CALLER_CLIENT:orchestration-service}
+    evaluation-scope: ${ELIGIBILITY_EVALUATION_SCOPE:eligibility.evaluate}
+  clients:
+    auth-url: ${AUTH_URL:http://localhost:8085}
+    application-url: ${APPLICATION_URL:http://localhost:8081}
+    consent-url: ${CONSENT_URL:http://localhost:8082}
+    workflow-url: ${ORCHESTRATION_URL:http://localhost:8084}
+    client-id: ${ELIGIBILITY_CLIENT_ID:eligibility-service}
+    client-secret: ${ELIGIBILITY_CLIENT_SECRET:}
+  security:
+    issuer: ${JWT_ISSUER:credflow-auth}
+    audience: ${JWT_AUDIENCE:credflow-api}
+    public-key-location: ${JWT_PUBLIC_KEY_PATH:}
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: when-authorized
+logging:
+  structured:
+    format:
+      console: logstash

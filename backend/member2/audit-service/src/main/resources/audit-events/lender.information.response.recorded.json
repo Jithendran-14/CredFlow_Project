@@ -1,0 +1,18 @@
+{
+  "eventType": "lender.information.response.recorded",
+  "producer": "orchestration-service",
+  "required": [
+    "informationRequestId",
+    "submissionId"
+  ],
+  "fields": {
+    "informationRequestId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "submissionId": {
+      "type": "string",
+      "format": "uuid"
+    }
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "eventType": "consent.applied",
+  "producer": "orchestration-service",
+  "required": [
+    "operationId",
+    "consentId",
+    "consentVersion"
+  ],
+  "fields": {
+    "operationId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "consentId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "consentVersion": {
+      "type": "integer",
+      "minimum": 1
+    }
+  }
+}

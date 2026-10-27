@@ -1,0 +1,26 @@
+{
+  "eventId": "035c7c0a-7ee3-5a87-8926-a8b3ccd886aa",
+  "eventType": "lender.cancellation.acknowledged",
+  "schemaVersion": "1.0",
+  "occurredAt": "2026-10-16T09:00:00Z",
+  "producer": "lender-integration-service",
+  "applicationId": "52de19d2-1bea-5fd3-9685-868e1a7207b7",
+  "aggregateVersion": 1,
+  "correlationId": "demo-flow-bank-a-104",
+  "data": {
+    "submissionId": "147ef5e6-266b-5f82-bbf5-a34183361fc4",
+    "applicationRevision": 1,
+    "lenderId": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb1",
+    "lenderApplicationId": "BA-147ef5e6-266b-5f82-bbf5-a34183361fc4",
+    "cancellationId": "3f0ac7f4-535c-58d9-b578-8c6413c60d48",
+    "cancellationAcknowledgementStatus": "ACKNOWLEDGED"
+  },
+  "actor": {
+    "type": "SYSTEM_CLIENT",
+    "subject": "lender-integration-service"
+  },
+  "originActor": {
+    "type": "HUMAN",
+    "subject": "seller-demo-104"
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "DRAFT Verification provider request v1",
+  "description": "Proposal for team review. No corresponding business HTTP endpoint or event producer is implemented yet.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "verificationRequestId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "applicationId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "applicationRevision": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "fixtureIdentityId": {
+      "type": "string",
+      "pattern": "^DEMO-[A-Z0-9-]{1,80}$"
+    }
+  },
+  "required": [
+    "verificationRequestId",
+    "applicationId",
+    "applicationRevision",
+    "fixtureIdentityId"
+  ]
+}

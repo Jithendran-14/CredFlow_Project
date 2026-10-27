@@ -1,0 +1,21 @@
+{
+  "eventId": "fffd75d2-4287-468c-ba92-dfa97fbbdb31",
+  "eventType": "financial.consent.withdrawn",
+  "schemaVersion": "1.0",
+  "occurredAt": "2026-10-22T10:00:00Z",
+  "producer": "consent-verification-service",
+  "applicationId": "ad11b546-8ef3-4b52-b339-17afc7dea0e3",
+  "aggregateVersion": 1,
+  "correlationId": "financial-consent-test",
+  "actor": {
+    "type": "HUMAN",
+    "subject": "seller"
+  },
+  "data": {
+    "financialConsentId": "f439c0fb-4c35-4397-881d-9cf5c348f2c9",
+    "financialConsentVersion": 1,
+    "applicationRevision": 1,
+    "operationalConsentVersion": 1,
+    "status": "REVOKED"
+  }
+}

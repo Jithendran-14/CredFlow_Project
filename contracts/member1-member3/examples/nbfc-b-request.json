@@ -1,0 +1,23 @@
+{
+  "applicationRevision": 1,
+  "lenderId": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb2",
+  "productId": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa2",
+  "eligibilityResultId": "aca57fc3-e36f-5198-a6f4-ac90320f9a12",
+  "verificationId": "acdf4c26-0d4f-5bdb-9b55-ff5bce71fd77",
+  "sellerSubject": "seller-demo-104",
+  "originActor": {
+    "type": "HUMAN",
+    "subject": "seller-demo-104"
+  },
+  "correlationId": "demo-flow-nbfc-b-104",
+  "caseReference": "6c62a5b9-2002-5fac-9c63-55d60748572c",
+  "credflowApplicationId": "d9d19b98-9a1e-5e84-ae96-ba34a0d885e1",
+  "merchantCode": "SELLER-104",
+  "legalName": "Demo Clothing",
+  "requestedLimit": "500000.00",
+  "currencyCode": "INR",
+  "facilityCode": "PURCHASE_INVENTORY",
+  "financialDataReference": "ce50965d-6fcc-5315-bbc0-50fa7487e9c3",
+  "consentReference": "270a952a-e4d7-5cf2-b767-21fdb214f822",
+  "consentRevision": 1
+}

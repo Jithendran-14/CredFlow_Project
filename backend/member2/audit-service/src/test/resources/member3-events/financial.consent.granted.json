@@ -1,0 +1,21 @@
+{
+  "eventId": "5d685bb8-cfd9-464f-acb9-1f0ee45969f4",
+  "eventType": "financial.consent.granted",
+  "schemaVersion": "1.0",
+  "occurredAt": "2026-10-22T10:00:00Z",
+  "producer": "consent-verification-service",
+  "applicationId": "ef1bc75a-65ff-4ce5-bb3f-584896853293",
+  "aggregateVersion": 1,
+  "correlationId": "financial-consent-test",
+  "actor": {
+    "type": "HUMAN",
+    "subject": "seller"
+  },
+  "data": {
+    "financialConsentId": "f2f9fac3-07fb-4606-a432-9173de4d52ca",
+    "financialConsentVersion": 1,
+    "applicationRevision": 1,
+    "operationalConsentVersion": 1,
+    "status": "ACTIVE"
+  }
+}

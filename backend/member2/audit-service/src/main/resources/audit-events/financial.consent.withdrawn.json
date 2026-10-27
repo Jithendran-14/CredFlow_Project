@@ -1,0 +1,33 @@
+{
+  "eventType": "financial.consent.withdrawn",
+  "producer": "consent-verification-service",
+  "required": [
+    "financialConsentId",
+    "financialConsentVersion",
+    "applicationRevision",
+    "operationalConsentVersion",
+    "status"
+  ],
+  "fields": {
+    "financialConsentId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "financialConsentVersion": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "applicationRevision": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "operationalConsentVersion": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "status": {
+      "type": "string",
+      "const": "REVOKED"
+    }
+  }
+}

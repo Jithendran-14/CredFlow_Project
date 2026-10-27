@@ -1,0 +1,40 @@
+{
+  "eventId": "ccefd547-c6b8-5ab6-b746-4bbbb5706356",
+  "eventType": "consent.updated",
+  "schemaVersion": "1.0",
+  "occurredAt": "2026-10-16T09:00:00Z",
+  "producer": "consent-verification-service",
+  "applicationId": "52de19d2-1bea-5fd3-9685-868e1a7207b7",
+  "aggregateVersion": 1,
+  "correlationId": "demo-flow-bank-a-104",
+  "data": {
+    "consentId": "cde7715d-fd28-5620-b755-d01d014968bc",
+    "consentVersion": 2,
+    "status": "REVOKED",
+    "scopes": [
+      "MARKETPLACE_DATA_READ",
+      "IDENTITY_VERIFICATION",
+      "LENDER_APPLICATION_SHARE"
+    ],
+    "sourceMarketplaceIds": [
+      "dd77e60a-5273-5576-b177-e07066692696"
+    ],
+    "recipientLenderIds": [
+      "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb1",
+      "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb2"
+    ],
+    "purpose": "Evaluate this application and share with its selected lender",
+    "validityPolicy": "APPLICATION_OPEN",
+    "noticeVersion": "1.0",
+    "grantedAt": "2026-10-16T09:00:00Z",
+    "revokedAt": "2026-10-16T09:00:00Z"
+  },
+  "actor": {
+    "type": "SYSTEM_CLIENT",
+    "subject": "consent-verification-service"
+  },
+  "originActor": {
+    "type": "HUMAN",
+    "subject": "seller-demo-104"
+  }
+}

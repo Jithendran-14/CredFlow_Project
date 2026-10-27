@@ -1,0 +1,211 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Mock external systems implemented API",
+    "version": "1.0.0",
+    "description": "Implemented fictional identity and financial providers. Financial dataset/receipt records persist in CF_SIM_FINANCIAL Oracle schema. Both endpoints are internal-only."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8090"
+    }
+  ],
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "paths": {
+    "/api/v1/system/mock-external-systems/info": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Authenticated foundation metadata"
+          },
+          "401": {
+            "description": "Authentication required"
+          }
+        }
+      }
+    },
+    "/actuator/health": {
+      "get": {
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Healthy"
+          },
+          "503": {
+            "description": "Unhealthy"
+          }
+        }
+      }
+    },
+    "/internal/v1/verification/checks": {
+      "post": {
+        "summary": "Return a fictional provider response",
+        "description": "VERIFICATION_SERVICE role required. Consent selects the trusted identity fixture. Same request and inputs returns the original scenario answer; changed inputs returns 409. Provider PENDING is a business response using HTTP 200.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "../drafts/member2/schemas/verification-request.schema.json"
+              },
+              "example": {
+                "verificationRequestId": "55555555-5555-4555-8555-555555555555",
+                "applicationId": "33333333-3333-4333-8333-333333333333",
+                "applicationRevision": 1,
+                "fixtureIdentityId": "DEMO-VERIFIED-001"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Fictional provider result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "../drafts/member2/schemas/verification-result.schema.json"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "../drafts/member2/schemas/error.schema.json"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid authentication"
+          },
+          "403": {
+            "description": "Caller is not permitted"
+          },
+          "409": {
+            "description": "Conflicting request or state",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "../drafts/member2/schemas/error.schema.json"
+                }
+              }
+            }
+          }
+        },
+        "x-implementation-status": "IMPLEMENTED_LOCAL"
+      }
+    },
+    "/internal/v1/financial-data/retrievals": {
+      "post": {
+        "summary": "Retrieve a persistent fictional three-month financial dataset",
+        "description": "Exact consent-verification-service client_id plus VERIFICATION_SERVICE role. Idempotency-Key equals requestId. Window is three complete months excluding the current month. Stable dataset and request receipts persist in Oracle; MISSING and AVAILABLE zero-sales months remain different.",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "requestId",
+                  "sellerFixtureId",
+                  "dataScope",
+                  "asOfDate",
+                  "periodStart",
+                  "periodEndExclusive"
+                ],
+                "properties": {
+                  "requestId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "sellerFixtureId": {
+                    "type": "string",
+                    "enum": [
+                      "DEMO-FINANCIAL-GOOD-001",
+                      "DEMO-FINANCIAL-LOW-001",
+                      "DEMO-FINANCIAL-MISSING-001",
+                      "DEMO-FINANCIAL-ZERO-001",
+                      "DEMO-FINANCIAL-HIGH-RETURNS-001"
+                    ]
+                  },
+                  "dataScope": {
+                    "const": "FINANCIAL_DATA_FOR_LOAN_ELIGIBILITY"
+                  },
+                  "asOfDate": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "periodStart": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "periodEndExclusive": {
+                    "type": "string",
+                    "format": "date"
+                  }
+                }
+              },
+              "example": {
+                "requestId": "99999999-9999-4999-8999-999999999999",
+                "sellerFixtureId": "DEMO-FINANCIAL-GOOD-001",
+                "dataScope": "FINANCIAL_DATA_FOR_LOAN_ELIGIBILITY",
+                "asOfDate": "2026-10-19",
+                "periodStart": "2026-07-01",
+                "periodEndExclusive": "2026-10-01"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "SUCCESS with requestId, sellerFixtureId and immutable dataset"
+          },
+          "400": {
+            "description": "Invalid key, scope or date window"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Wrong service role/client identity"
+          },
+          "404": {
+            "description": "Unknown financial fixture"
+          },
+          "409": {
+            "description": "Idempotency key reused with different inputs"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {}
+  }
+}

@@ -1,0 +1,187 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://credflow.local/contracts/events/application.status.changed.schema.json",
+  "title": "application.status.changed",
+  "type": "object",
+  "properties": {
+    "eventId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "eventType": {
+      "const": "application.status.changed"
+    },
+    "schemaVersion": {
+      "const": "1.0"
+    },
+    "occurredAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "producer": {
+      "const": "orchestration-service"
+    },
+    "applicationId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "aggregateVersion": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "correlationId": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9._:-]{1,100}$"
+    },
+    "causationId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "data": {
+      "type": "object",
+      "properties": {
+        "previousStatus": {
+          "anyOf": [
+            {
+              "enum": [
+                "DRAFT",
+                "SUBMITTED",
+                "ACTION_REQUIRED",
+                "CHECK_FAILED",
+                "ELIGIBILITY_CHECKING",
+                "NOT_ELIGIBLE",
+                "READY_FOR_LENDER",
+                "SUBMITTING",
+                "UNDER_REVIEW",
+                "ACTION_REQUIRED",
+                "MANUAL_REVIEW",
+                "APPROVED",
+                "OFFER_ACCEPTED",
+                "OFFER_DECLINED",
+                "OFFER_EXPIRED",
+                "REJECTED",
+                "CANCELLED"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "status": {
+          "enum": [
+            "DRAFT",
+            "SUBMITTED",
+            "ACTION_REQUIRED",
+            "CHECK_FAILED",
+            "ELIGIBILITY_CHECKING",
+            "NOT_ELIGIBLE",
+            "READY_FOR_LENDER",
+            "SUBMITTING",
+            "UNDER_REVIEW",
+            "ACTION_REQUIRED",
+            "MANUAL_REVIEW",
+            "APPROVED",
+            "OFFER_ACCEPTED",
+            "OFFER_DECLINED",
+            "OFFER_EXPIRED",
+            "REJECTED",
+            "CANCELLED"
+          ]
+        },
+        "processingHealth": {
+          "enum": [
+            "OK",
+            "RETRY_PENDING",
+            "OUTCOME_UNKNOWN",
+            "MANUAL_INTERVENTION_REQUIRED"
+          ]
+        },
+        "workflowVersion": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "applicationRevision": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "reasonCode": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "status",
+        "processingHealth",
+        "workflowVersion",
+        "applicationRevision"
+      ],
+      "additionalProperties": false
+    },
+    "actor": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "enum": [
+            "HUMAN",
+            "SYSTEM",
+            "SYSTEM_CLIENT"
+          ]
+        },
+        "subject": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 255
+        },
+        "organisationId": {
+          "type": "string",
+          "format": "uuid"
+        }
+      },
+      "required": [
+        "type",
+        "subject"
+      ],
+      "additionalProperties": false
+    },
+    "originActor": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "enum": [
+            "HUMAN",
+            "SYSTEM",
+            "SYSTEM_CLIENT"
+          ]
+        },
+        "subject": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 255
+        },
+        "organisationId": {
+          "type": "string",
+          "format": "uuid"
+        }
+      },
+      "required": [
+        "type",
+        "subject"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "eventId",
+    "eventType",
+    "schemaVersion",
+    "occurredAt",
+    "producer",
+    "applicationId",
+    "aggregateVersion",
+    "correlationId",
+    "data",
+    "actor"
+  ],
+  "additionalProperties": false
+}

@@ -1,0 +1,51 @@
+{
+  "eventType": "loan.offer.declined",
+  "producer": "orchestration-service",
+  "required": [
+    "offerId",
+    "submissionId",
+    "applicationRevision",
+    "lenderId",
+    "operationAt",
+    "expectedOfferVersion",
+    "lenderAcknowledgementStatus",
+    "declineId"
+  ],
+  "fields": {
+    "offerId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "submissionId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "applicationRevision": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "lenderId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "operationAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "expectedOfferVersion": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "lenderAcknowledgementStatus": {
+      "enum": [
+        "PENDING",
+        "ACKNOWLEDGED",
+        "FAILED"
+      ]
+    },
+    "declineId": {
+      "type": "string",
+      "format": "uuid"
+    }
+  }
+}

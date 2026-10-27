@@ -1,0 +1,61 @@
+{
+  "eventType": "loan.offer.withdrawn",
+  "producer": "lender-integration-service",
+  "required": [
+    "submissionId",
+    "applicationRevision",
+    "lenderId",
+    "lenderApplicationId",
+    "offerId"
+  ],
+  "fields": {
+    "applicationId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "submissionId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "applicationRevision": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "lenderId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "lenderApplicationId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 120
+    },
+    "offerId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "reasonCode": {
+      "type": "string",
+      "minLength": 1
+    },
+    "declineId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "operationAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "expectedOfferVersion": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "lenderAcknowledgementStatus": {
+      "enum": [
+        "PENDING",
+        "ACKNOWLEDGED",
+        "FAILED"
+      ]
+    }
+  }
+}

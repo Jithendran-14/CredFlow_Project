@@ -1,0 +1,62 @@
+
+server:
+  port: 8081
+
+spring:
+  application:
+    name: application-service
+
+  datasource:
+    url: jdbc:oracle:thin:@//localhost:1521/FREEPDB1
+    username: CF_APPLICATION
+    password: ${CREDFLOW_DB_PASSWORD}
+    driver-class-name: oracle.jdbc.OracleDriver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          public-key-location: classpath:keys/credflow-public.pem
+  kafka:
+   bootstrap-servers: 127.0.0.1:9092
+
+  producer:
+   client-id: credflow-application-outbox
+   key-serializer: org.apache.kafka.common.serialization.StringSerializer
+   value-serializer: org.apache.kafka.common.serialization.StringSerializer
+   acks: all
+   properties:
+     enable.idempotence: true
+     max.in.flight.requests.per.connection: 5
+     request.timeout.ms: 30000
+     delivery.timeout.ms: 120000
+     max.block.ms: 10000
+
+credflow:
+ jwt:
+   issuer: credflow-auth
+   audience: credflow-api
+   public-key-path: ${CREDFLOW_PUBLIC_KEY_PATH}
+ kafka:
+   smoke-test-enabled: false
+ outbox:
+   enabled: true
+   poll-delay-ms: 5000
+   initial-delay-ms: 10000
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+  endpoint:
+    health:
+      show-details: never

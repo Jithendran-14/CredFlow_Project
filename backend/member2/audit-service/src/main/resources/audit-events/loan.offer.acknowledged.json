@@ -1,0 +1,87 @@
+{
+  "eventType": "loan.offer.acknowledged",
+  "producer": "lender-integration-service",
+  "required": [
+    "submissionId",
+    "applicationRevision",
+    "lenderId",
+    "lenderApplicationId",
+    "offerId",
+    "acceptanceId",
+    "lenderAcknowledgementStatus"
+  ],
+  "fields": {
+    "applicationId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "submissionId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "applicationRevision": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "lenderId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "lenderApplicationId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 120
+    },
+    "offerId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "acceptanceId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "acceptedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "operationAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "expectedOfferVersion": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "lenderAcknowledgementStatus": {
+      "enum": [
+        "ACKNOWLEDGED",
+        "FAILED"
+      ]
+    },
+    "failureCode": {
+      "type": "string",
+      "minLength": 1
+    },
+    "outcomeUnknown": {
+      "type": "boolean"
+    },
+    "taskId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "operation": {
+      "enum": [
+        "SUBMIT",
+        "DECISION",
+        "REQUEST_INFORMATION",
+        "ANSWER_INFORMATION",
+        "CREATE_OFFER",
+        "WITHDRAW_OFFER",
+        "ACCEPT_OFFER",
+        "DECLINE_OFFER",
+        "CANCEL",
+        "CALLBACK"
+      ]
+    }
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "financialSnapshotId": "2aa93b3c-cc29-5f3d-a246-59b046868c87",
+  "applicationId": "52de19d2-1bea-5fd3-9685-868e1a7207b7",
+  "applicationRevision": 1,
+  "sourceMarketplaceId": "dd77e60a-5273-5576-b177-e07066692696",
+  "fetchedAt": "2026-10-16T09:00:00Z",
+  "asOfDate": "2026-10-16",
+  "currency": "INR",
+  "coverageStatus": "COMPLETE",
+  "months": [
+    {
+      "periodStart": "2026-07-01",
+      "periodEnd": "2026-07-31",
+      "grossSalesAmount": "300000.00",
+      "returnAmount": "10000.00",
+      "payoutAmount": "280000.00",
+      "orderCount": 100,
+      "returnedOrderCount": 3
+    },
+    {
+      "periodStart": "2026-08-01",
+      "periodEnd": "2026-08-31",
+      "grossSalesAmount": "300000.00",
+      "returnAmount": "10000.00",
+      "payoutAmount": "280000.00",
+      "orderCount": 100,
+      "returnedOrderCount": 3
+    },
+    {
+      "periodStart": "2026-09-01",
+      "periodEnd": "2026-09-30",
+      "grossSalesAmount": "300000.00",
+      "returnAmount": "10000.00",
+      "payoutAmount": "280000.00",
+      "orderCount": 100,
+      "returnedOrderCount": 3
+    }
+  ]
+}

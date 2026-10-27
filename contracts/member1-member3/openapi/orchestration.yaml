@@ -1,0 +1,2539 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "CredFlow Orchestration API",
+    "version": "1.0.1",
+    "description": "Member 3 workflow, lender work queue, seller information responses and offer actions. Oracle persistence; business state is distinct from processing health. No frontend is included. System APIs are private. Application creation, consent collection and eligibility calculations belong to Members 1 and 2 and arrive through agreed events. Aligned to the two upstream contracts dated 2026-10-16. Validate the configured Member 1 RS256 issuer, audience, expiry and nonblank subject against an explicitly configured JWKS or public RSA key. Default FLAT mode reads roles (or role) and trusted camelCase sellerId/marketplaceId/lenderId; KEYCLOAK mode is opt-in. SELLER ownership uses trusted sellerId when stored, with legacy subject fallback only for older workflows without it. MARKETPLACE is a scoped alias for MARKETPLACE_OPERATIONS. Auth currently does not provision lender officers or machine clients. Internal endpoints still require designated client identity and narrow scopes; ADMIN cannot bypass them. See docs/team-contract-alignment.md."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8084",
+      "description": "Direct service address; expose public routes through Member 1 Gateway after route configuration."
+    }
+  ],
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "paths": {
+    "/api/v1/applications/{id}/workflow": {
+      "get": {
+        "operationId": "getWorkflow",
+        "summary": "Read workflow status and processing issues",
+        "description": "SELLER with trusted JWT sellerId matching the application trusted seller identity (legacy subject fallback only when no sellerId is stored); assigned LENDER_OFFICER with matching lenderId (legacy lender_id accepted); or ADMIN. Nonowned resources return 404. MARKETPLACE_OPERATIONS may read workflow/status only when JWT marketplaceId (legacy marketplace_id accepted) matches the application marketplace.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/CorrelationId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success; an idempotent replay returns the original response.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Trace ID for this request.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Workflow"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        }
+      }
+    },
+    "/api/v1/applications/{id}/offers": {
+      "get": {
+        "operationId": "listOffers",
+        "summary": "List application offers",
+        "description": "SELLER with trusted JWT sellerId matching the application trusted seller identity (legacy subject fallback only when no sellerId is stored); assigned LENDER_OFFICER with matching lenderId (legacy lender_id accepted); or ADMIN. Nonowned resources return 404. MARKETPLACE_OPERATIONS is excluded. Reads expire elapsed ACTIVE offers under the workflow lock.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/CorrelationId"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 0,
+              "default": 0,
+              "maximum": 2147483647
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success; an idempotent replay returns the original response.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Trace ID for this request.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OfferPage"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        }
+      }
+    },
+    "/api/v1/applications/{id}/information-requests": {
+      "get": {
+        "operationId": "listInformationRequests",
+        "summary": "List lender questions and recorded answers",
+        "description": "SELLER with trusted JWT sellerId matching the application trusted seller identity (legacy subject fallback only when no sellerId is stored); assigned LENDER_OFFICER with matching lenderId (legacy lender_id accepted); or ADMIN. Nonowned resources return 404. MARKETPLACE_OPERATIONS is excluded.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/CorrelationId"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 0,
+              "default": 0,
+              "maximum": 2147483647
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success; an idempotent replay returns the original response.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Trace ID for this request.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InformationPage"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        }
+      }
+    },
+    "/api/v1/submissions": {
+      "get": {
+        "operationId": "listSubmissions",
+        "summary": "Read lender submission work queue",
+        "description": "LENDER_OFFICER sees only matching lenderId (legacy lender_id accepted); an explicit different lender filter returns 404. MARKETPLACE_OPERATIONS sees only matching marketplaceId (legacy marketplace_id accepted). ADMIN sees all. SELLER cannot list this queue.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/CorrelationId"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 0,
+              "default": 0,
+              "maximum": 2147483647
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          },
+          {
+            "name": "lenderId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success; an idempotent replay returns the original response.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Trace ID for this request.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubmissionPage"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        }
+      }
+    },
+    "/api/v1/submissions/{id}": {
+      "get": {
+        "operationId": "getSubmission",
+        "summary": "Read assigned submission detail",
+        "description": "SELLER with trusted JWT sellerId matching the application trusted seller identity (legacy subject fallback only when no sellerId is stored); assigned LENDER_OFFICER with matching lenderId (legacy lender_id accepted); or ADMIN. Nonowned resources return 404. MARKETPLACE_OPERATIONS is excluded from this detailed business payload.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/CorrelationId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success; an idempotent replay returns the original response.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Trace ID for this request.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubmissionDetail"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        }
+      }
+    },
+    "/api/v1/offers/{id}/acceptance": {
+      "post": {
+        "operationId": "acceptOffer",
+        "summary": "Accept an active unexpired offer",
+        "description": "Owning SELLER only. Idempotency-Key and exact current offer version are required. State, consent, expiry and version checks are atomic; a conflict returns 409. Acceptance commits locally and lender acknowledgement is asynchronous. Retry with the original key and body.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/CorrelationId"
+          },
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success; an idempotent replay returns the original response.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Trace ID for this request.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Offer"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OfferAction"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/offers/{id}/decline": {
+      "post": {
+        "operationId": "declineOffer",
+        "summary": "Decline an active offer",
+        "description": "Owning SELLER only. Idempotency-Key and exact current offer version are required. State, consent, expiry and version checks are atomic; a conflict returns 409. Acceptance commits locally and lender acknowledgement is asynchronous. Retry with the original key and body.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/CorrelationId"
+          },
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success; an idempotent replay returns the original response.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Trace ID for this request.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Offer"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OfferAction"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/information-requests/{id}/responses": {
+      "post": {
+        "operationId": "answerInformationRequest",
+        "summary": "Record seller answers",
+        "description": "Owning SELLER only. All question IDs must be answered exactly once. Current information version, active consent and OPEN request required. Only synthetic document references are accepted. Returns the durable operation ID; poll questions/workflow for lender acknowledgement.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/CorrelationId"
+          },
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Accepted for durable asynchronous processing.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Trace ID for this request.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnswersAccepted"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Answers"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/applications/{id}/cancellation": {
+      "post": {
+        "operationId": "cancelApplication",
+        "summary": "Cancel an application",
+        "description": "Owning SELLER only. Requires current workflow version and a nonterminal state. Local cancellation is immediate; external lender cancellation runs durably. Poll workflow and submission acknowledgement.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/CorrelationId"
+          },
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Accepted for durable asynchronous processing.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Trace ID for this request.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkflowAccepted"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WorkflowCommand"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/applications/{id}/financial-refresh": {
+      "post": {
+        "operationId": "refreshFinancialData",
+        "summary": "Retry an incomplete financial check",
+        "description": "Owning SELLER only. Requires ACTION_REQUIRED with FINANCIAL_DATA_INCOMPLETE, FINANCIAL_DATA_INCONSISTENT, FINANCIAL_DATA_INSUFFICIENT or FINANCIAL_RETRIEVAL_REFERENCE_REQUIRED, valid consent, trusted seller mapping, no dispatch/revision in progress and current workflow version. At most one refresh per unchanged application revision. A new trusted Consent verification attempt must supply financial authority before Eligibility is called; users cannot submit their own retrieval reference.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/CorrelationId"
+          },
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Accepted for durable asynchronous processing.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Trace ID for this request.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkflowAccepted"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WorkflowCommand"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/internal/submissions/{id}/authorization": {
+      "get": {
+        "operationId": "getDispatchAuthorization",
+        "summary": "Check authorization immediately before lender dispatch",
+        "description": "Private Integration client only: workflow.internal scope and configured credflow.clients.integration client identity. Returns false when consent/revision/business state gates sharing. Never reuse an old positive response for a later dispatch attempt.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/CorrelationId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success; an idempotent replay returns the original response.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Trace ID for this request.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DispatchAuthorization"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        }
+      }
+    },
+    "/api/v1/internal/applications/{id}/revision-guard": {
+      "post": {
+        "operationId": "guardRevision",
+        "summary": "Reserve a correction operation before Member 1 updates application inputs",
+        "description": "Private Application client only: workflow.revision scope and configured credflow.clients.application identity. Reserve a correction operation before Member 1 updates application inputs. Only ACTION_REQUIRED before dispatch; newRevision must equal expectedRevision + 1. Identical operation replay is safe.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/CorrelationId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success; an idempotent replay returns the original response.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Trace ID for this request.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CorrectionResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Correction"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/internal/applications/{id}/revision-abort": {
+      "post": {
+        "operationId": "abortRevision",
+        "summary": "Release the matching revision reservation when Member 1 aborts its update",
+        "description": "Private Application client only: workflow.revision scope and configured credflow.clients.application identity. Release the matching revision reservation when Member 1 aborts its update. The same operation ID is required.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/CorrelationId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success; an idempotent replay returns the original response.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Trace ID for this request.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CorrectionResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Correction"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/internal/applications/{id}/consent-operations": {
+      "post": {
+        "operationId": "applyConsentOperation",
+        "summary": "Apply a durable consent update",
+        "description": "Private Consent client only: workflow.consent scope and configured credflow.clients.consent identity. operationId is the durable idempotency identity. Reusing it with another payload returns 409. Required scope/source/recipient removal gates sharing and cancels nonterminal dispatched applications.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/CorrelationId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success; an idempotent replay returns the original response.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Trace ID for this request.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConsentApplied"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConsentOperation"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/internal/deliveries": {
+      "get": {
+        "operationId": "listDeliveries",
+        "summary": "List durable delivery records",
+        "description": "ADMIN role and ops.replay scope required. Private operational API; do not expose through public Gateway routes. Payload content and credentials are deliberately omitted.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/CorrelationId"
+          },
+          {
+            "name": "kind",
+            "in": "query",
+            "schema": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/DeliveryKind"
+                }
+              ],
+              "default": "JOB"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/DeliveryState"
+                }
+              ],
+              "default": "DEAD"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 0,
+              "default": 0,
+              "maximum": 2147483647
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success; an idempotent replay returns the original response.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Trace ID for this request.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeliveryPage"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        }
+      }
+    },
+    "/api/v1/internal/deliveries/{kind}/{id}": {
+      "get": {
+        "operationId": "getDelivery",
+        "summary": "Read delivery state",
+        "description": "ADMIN role and ops.replay scope required. Private operational API; do not expose through public Gateway routes. Payload content and credentials are deliberately omitted.",
+        "parameters": [
+          {
+            "name": "kind",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/DeliveryKind"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/CorrelationId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success; an idempotent replay returns the original response.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Trace ID for this request.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeliveryStatus"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        }
+      }
+    },
+    "/api/v1/internal/deliveries/{kind}/{id}/replay": {
+      "post": {
+        "operationId": "replayDelivery",
+        "summary": "Replay a dead delivery",
+        "description": "ADMIN role and ops.replay scope required. Private operational API; do not expose through public Gateway routes. Payload content and credentials are deliberately omitted. Only DEAD records may be replayed. The original identity, payload and correlation are retained. A job replay updates workflow processing health without changing business status.",
+        "parameters": [
+          {
+            "name": "kind",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/DeliveryKind"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/CorrelationId"
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Accepted for durable asynchronous processing.",
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Trace ID for this request.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReplayAccepted"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Validate the configured Member 1 RS256 issuer, audience, expiry and nonblank subject against an explicitly configured JWKS or public RSA key. Default FLAT mode reads roles (or role) and trusted camelCase sellerId/marketplaceId/lenderId; KEYCLOAK mode is opt-in. SELLER ownership uses trusted sellerId when stored, with legacy subject fallback only for older workflows without it. MARKETPLACE is a scoped alias for MARKETPLACE_OPERATIONS. Auth currently does not provision lender officers or machine clients. Internal endpoints still require designated client identity and narrow scopes; ADMIN cannot bypass them. See docs/team-contract-alignment.md."
+      }
+    },
+    "schemas": {
+      "Actor": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "HUMAN",
+              "SYSTEM_CLIENT"
+            ]
+          },
+          "subject": {
+            "type": "string",
+            "minLength": 1
+          },
+          "organisationId": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "type",
+          "subject"
+        ]
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "correlationId": {
+            "type": "string"
+          },
+          "fieldErrors": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "field": {
+                  "type": "string"
+                },
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "field",
+                "message"
+              ]
+            }
+          }
+        },
+        "required": [
+          "code",
+          "message",
+          "correlationId",
+          "fieldErrors"
+        ]
+      },
+      "WorkflowStatus": {
+        "type": "string",
+        "enum": [
+          "DRAFT",
+          "SUBMITTED",
+          "ACTION_REQUIRED",
+          "CHECK_FAILED",
+          "ELIGIBILITY_CHECKING",
+          "NOT_ELIGIBLE",
+          "READY_FOR_LENDER",
+          "SUBMITTING",
+          "UNDER_REVIEW",
+          "ACTION_REQUIRED",
+          "MANUAL_REVIEW",
+          "REJECTED",
+          "APPROVED",
+          "OFFER_ACCEPTED",
+          "OFFER_DECLINED",
+          "OFFER_EXPIRED",
+          "CANCELLED"
+        ]
+      },
+      "ProcessingHealth": {
+        "type": "string",
+        "enum": [
+          "OK",
+          "RETRY_PENDING",
+          "OUTCOME_UNKNOWN",
+          "MANUAL_INTERVENTION_REQUIRED"
+        ]
+      },
+      "ProcessingIssue": {
+        "type": "object",
+        "properties": {
+          "issueId": {
+            "type": "string"
+          },
+          "operationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "JOB",
+              "TASK",
+              "CALLBACK"
+            ]
+          },
+          "operation": {
+            "type": "string"
+          },
+          "applicationRevision": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          },
+          "processingHealth": {
+            "$ref": "#/components/schemas/ProcessingHealth"
+          },
+          "resolved": {
+            "type": "boolean"
+          },
+          "failureCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "informationRequestId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "offerId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "acceptanceId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "cancellationId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          }
+        },
+        "required": [
+          "issueId",
+          "operationId",
+          "kind",
+          "operation",
+          "applicationRevision",
+          "processingHealth",
+          "resolved",
+          "failureCode"
+        ]
+      },
+      "Workflow": {
+        "type": "object",
+        "properties": {
+          "applicationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "$ref": "#/components/schemas/WorkflowStatus"
+          },
+          "processingHealth": {
+            "$ref": "#/components/schemas/ProcessingHealth"
+          },
+          "processingIssues": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProcessingIssue"
+            }
+          },
+          "workflowVersion": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "applicationRevision": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          },
+          "revisionPending": {
+            "type": "boolean"
+          },
+          "lenderId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "productId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "submissionId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "verificationId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "evaluationRequestId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "financialSnapshotId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "eligibilityResultId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "cancellationId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "reasonCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "asOfDate": {
+            "type": "string",
+            "format": "date",
+            "description": "UTC date frozen for the current evaluation attempt, omitted before evaluation."
+          },
+          "eligibilityOperationId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Optional operation metadata returned by proposed Eligibility 202; does not imply upstream polling is implemented."
+          },
+          "eligibilityStatusUrl": {
+            "type": "string",
+            "description": "Optional safe operation status path returned by Eligibility. Stored for integration visibility; no automatic polling contract is assumed."
+          }
+        },
+        "required": [
+          "applicationId",
+          "status",
+          "processingHealth",
+          "processingIssues",
+          "workflowVersion",
+          "applicationRevision",
+          "revisionPending"
+        ]
+      },
+      "Offer": {
+        "type": "object",
+        "properties": {
+          "offerId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "submissionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "offeredAmount": {
+            "type": "string",
+            "pattern": "^[0-9]{1,17}\\.[0-9]{2}$",
+            "example": "100000.00",
+            "description": "Decimal string with exactly two fractional digits; positive for requested/offered amounts and nonnegative for fees."
+          },
+          "currency": {
+            "type": "string",
+            "enum": [
+              "INR"
+            ]
+          },
+          "annualInterestRatePercent": {
+            "type": "string",
+            "pattern": "^[0-9]{1,3}(\\.[0-9]{1,4})?$"
+          },
+          "interestRateType": {
+            "type": "string",
+            "enum": [
+              "FIXED"
+            ]
+          },
+          "tenureMonths": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1,
+            "maximum": 120
+          },
+          "repaymentFrequency": {
+            "type": "string",
+            "enum": [
+              "MONTHLY"
+            ]
+          },
+          "feesAmount": {
+            "type": "string",
+            "pattern": "^[0-9]{1,17}\\.[0-9]{2}$",
+            "example": "100000.00",
+            "description": "Decimal string with exactly two fractional digits; positive for requested/offered amounts and nonnegative for fees."
+          },
+          "termsReference": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ACTIVE",
+              "ACCEPTED",
+              "DECLINED",
+              "EXPIRED",
+              "WITHDRAWN"
+            ]
+          },
+          "version": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "acceptanceId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "acceptedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "lenderAcknowledgementStatus": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "offerId",
+          "submissionId",
+          "offeredAmount",
+          "currency",
+          "annualInterestRatePercent",
+          "interestRateType",
+          "tenureMonths",
+          "repaymentFrequency",
+          "feesAmount",
+          "termsReference",
+          "expiresAt",
+          "status",
+          "version",
+          "acceptanceId",
+          "acceptedAt",
+          "lenderAcknowledgementStatus"
+        ]
+      },
+      "OfferPage": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Offer"
+            }
+          },
+          "page": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "size": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1,
+            "maximum": 100
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "items",
+          "page",
+          "size",
+          "totalElements"
+        ]
+      },
+      "Question": {
+        "type": "object",
+        "properties": {
+          "questionId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "prompt": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1000
+          }
+        },
+        "required": [
+          "questionId",
+          "prompt"
+        ]
+      },
+      "Answer": {
+        "type": "object",
+        "properties": {
+          "questionId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "answerText": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4000
+          }
+        },
+        "required": [
+          "questionId",
+          "answerText"
+        ],
+        "additionalProperties": false
+      },
+      "InformationRequest": {
+        "type": "object",
+        "properties": {
+          "informationRequestId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "submissionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "OPEN",
+              "ANSWERED",
+              "CANCELLED"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "answeredAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "version": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "questions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Question"
+            }
+          },
+          "answers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Answer"
+            },
+            "nullable": true
+          },
+          "syntheticDocumentReferences": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^synthetic://[A-Za-z0-9_./-]{1,200}$"
+            },
+            "nullable": true
+          },
+          "lenderAcknowledgementStatus": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "informationRequestId",
+          "submissionId",
+          "status",
+          "createdAt",
+          "answeredAt",
+          "version",
+          "questions",
+          "answers",
+          "syntheticDocumentReferences",
+          "lenderAcknowledgementStatus"
+        ]
+      },
+      "InformationPage": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/InformationRequest"
+            }
+          },
+          "page": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "size": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1,
+            "maximum": 100
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "items",
+          "page",
+          "size",
+          "totalElements"
+        ]
+      },
+      "Submission": {
+        "type": "object",
+        "properties": {
+          "submissionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "applicationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "applicationRevision": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          },
+          "lenderId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "productId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "type": "string"
+          },
+          "lenderApplicationId": {
+            "type": "string",
+            "nullable": true
+          },
+          "version": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "cancellationAcknowledgementStatus": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "submissionId",
+          "applicationId",
+          "applicationRevision",
+          "lenderId",
+          "productId",
+          "status",
+          "lenderApplicationId",
+          "version",
+          "cancellationAcknowledgementStatus"
+        ]
+      },
+      "SubmissionPage": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Submission"
+            }
+          },
+          "page": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "size": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1,
+            "maximum": 100
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "items",
+          "page",
+          "size",
+          "totalElements"
+        ]
+      },
+      "SubmissionDetail": {
+        "type": "object",
+        "properties": {
+          "submissionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "applicationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "applicationRevision": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          },
+          "lenderId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "productId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "registeredBusinessName": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "businessProfile": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "requestedAmount": {
+            "type": "string",
+            "pattern": "^[0-9]{1,17}\\.[0-9]{2}$",
+            "example": "100000.00",
+            "description": "Decimal string with exactly two fractional digits; positive for requested/offered amounts and nonnegative for fees."
+          },
+          "currency": {
+            "type": "string",
+            "enum": [
+              "INR"
+            ]
+          },
+          "loanPurpose": {
+            "type": "string",
+            "enum": [
+              "PURCHASE_INVENTORY",
+              "WORKING_CAPITAL",
+              "BUSINESS_EXPANSION"
+            ]
+          },
+          "financialSnapshotId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "eligibilityResultId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "status": {
+            "type": "string"
+          },
+          "lenderApplicationId": {
+            "type": "string",
+            "nullable": true
+          },
+          "version": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "workflow": {
+            "$ref": "#/components/schemas/Workflow"
+          }
+        },
+        "required": [
+          "submissionId",
+          "applicationId",
+          "applicationRevision",
+          "lenderId",
+          "productId",
+          "registeredBusinessName",
+          "businessProfile",
+          "requestedAmount",
+          "currency",
+          "loanPurpose",
+          "financialSnapshotId",
+          "eligibilityResultId",
+          "status",
+          "lenderApplicationId",
+          "version",
+          "workflow"
+        ]
+      },
+      "OfferAction": {
+        "type": "object",
+        "properties": {
+          "expectedOfferVersion": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "expectedOfferVersion"
+        ]
+      },
+      "WorkflowCommand": {
+        "type": "object",
+        "properties": {
+          "expectedWorkflowVersion": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "expectedWorkflowVersion"
+        ]
+      },
+      "Answers": {
+        "type": "object",
+        "properties": {
+          "expectedInformationVersion": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "answers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Answer"
+            },
+            "minItems": 1
+          },
+          "syntheticDocumentReferences": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^synthetic://[A-Za-z0-9_./-]{1,200}$"
+            },
+            "default": []
+          }
+        },
+        "required": [
+          "expectedInformationVersion",
+          "answers"
+        ]
+      },
+      "AnswersAccepted": {
+        "type": "object",
+        "properties": {
+          "operationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "informationRequestId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "version": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "lenderAcknowledgementStatus": {
+            "type": "string",
+            "enum": [
+              "PENDING"
+            ]
+          }
+        },
+        "required": [
+          "operationId",
+          "informationRequestId",
+          "version",
+          "lenderAcknowledgementStatus"
+        ]
+      },
+      "WorkflowAccepted": {
+        "type": "object",
+        "properties": {
+          "operationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "workflow": {
+            "$ref": "#/components/schemas/Workflow"
+          }
+        },
+        "required": [
+          "operationId",
+          "workflow"
+        ]
+      },
+      "DispatchAuthorization": {
+        "type": "object",
+        "properties": {
+          "authorized": {
+            "type": "boolean"
+          },
+          "applicationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "applicationRevision": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          },
+          "consentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "consentVersion": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          }
+        },
+        "required": [
+          "authorized",
+          "applicationId",
+          "applicationRevision",
+          "consentId",
+          "consentVersion"
+        ]
+      },
+      "Correction": {
+        "type": "object",
+        "properties": {
+          "operationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "expectedRevision": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          },
+          "newRevision": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          },
+          "originActor": {
+            "$ref": "#/components/schemas/Actor"
+          }
+        },
+        "required": [
+          "operationId",
+          "expectedRevision",
+          "newRevision",
+          "originActor"
+        ]
+      },
+      "CorrectionResult": {
+        "type": "object",
+        "properties": {
+          "authorized": {
+            "type": "boolean"
+          },
+          "operationId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "authorized",
+          "operationId"
+        ]
+      },
+      "ConsentOperation": {
+        "type": "object",
+        "properties": {
+          "operationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "consentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "consentVersion": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "GRANTED",
+              "DECLINED",
+              "REVOKED"
+            ]
+          },
+          "scopes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "sourceMarketplaceIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "recipientLenderIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "purpose": {
+            "type": "string"
+          },
+          "validityPolicy": {
+            "type": "string",
+            "enum": [
+              "APPLICATION_OPEN"
+            ]
+          },
+          "originActor": {
+            "$ref": "#/components/schemas/Actor"
+          }
+        },
+        "required": [
+          "operationId",
+          "consentId",
+          "consentVersion",
+          "status",
+          "scopes",
+          "sourceMarketplaceIds",
+          "recipientLenderIds",
+          "purpose",
+          "validityPolicy"
+        ]
+      },
+      "ConsentApplied": {
+        "type": "object",
+        "properties": {
+          "operationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "APPLIED"
+            ]
+          },
+          "workflow": {
+            "$ref": "#/components/schemas/Workflow"
+          }
+        },
+        "required": [
+          "operationId",
+          "status",
+          "workflow"
+        ]
+      },
+      "DeliveryKind": {
+        "type": "string",
+        "enum": [
+          "JOB",
+          "INBOX",
+          "OUTBOX",
+          "DLT"
+        ]
+      },
+      "DeliveryState": {
+        "type": "string",
+        "enum": [
+          "PENDING",
+          "RUNNING",
+          "DONE",
+          "DEAD"
+        ]
+      },
+      "Delivery": {
+        "type": "object",
+        "properties": {
+          "deliveryId": {
+            "type": "string",
+            "description": "Stored identity, including kind prefix."
+          },
+          "operationId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Bare UUID to use in the status/replay path."
+          },
+          "kind": {
+            "$ref": "#/components/schemas/DeliveryKind"
+          },
+          "applicationId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "target": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "$ref": "#/components/schemas/DeliveryState"
+          },
+          "attempts": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "nextAttemptAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "error": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "deliveryId",
+          "operationId",
+          "kind",
+          "applicationId",
+          "target",
+          "status",
+          "attempts",
+          "nextAttemptAt"
+        ]
+      },
+      "DeliveryPage": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Delivery"
+            }
+          },
+          "page": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "size": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1,
+            "maximum": 100
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "items",
+          "page",
+          "size",
+          "totalElements"
+        ]
+      },
+      "DeliveryStatus": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "$ref": "#/components/schemas/DeliveryState"
+          },
+          "attempts": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "nextAttemptAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "error": {
+            "type": "string",
+            "description": "Empty string when no failure is stored."
+          }
+        },
+        "required": [
+          "status",
+          "attempts",
+          "nextAttemptAt",
+          "error"
+        ]
+      },
+      "ReplayAccepted": {
+        "type": "object",
+        "properties": {
+          "operationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING"
+            ]
+          }
+        },
+        "required": [
+          "operationId",
+          "status"
+        ]
+      }
+    },
+    "responses": {
+      "Error400": {
+        "description": "Invalid input, header, pagination or unsupported operation.",
+        "headers": {
+          "X-Correlation-ID": {
+            "description": "Trace ID for this request.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "Error401": {
+        "description": "Missing, expired or invalid JWT, issuer or service audience.",
+        "headers": {
+          "X-Correlation-ID": {
+            "description": "Trace ID for this request.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "Error403": {
+        "description": "Missing role, scope or trusted system client.",
+        "headers": {
+          "X-Correlation-ID": {
+            "description": "Trace ID for this request.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "Error404": {
+        "description": "Resource absent or concealed because the authenticated caller does not own it.",
+        "headers": {
+          "X-Correlation-ID": {
+            "description": "Trace ID for this request.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "Error409": {
+        "description": "Business state, optimistic version, duplicate reference or idempotency conflict.",
+        "headers": {
+          "X-Correlation-ID": {
+            "description": "Trace ID for this request.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "Error503": {
+        "description": "Required dependency unavailable.",
+        "headers": {
+          "X-Correlation-ID": {
+            "description": "Trace ID for this request.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      }
+    },
+    "parameters": {
+      "CorrelationId": {
+        "name": "X-Correlation-ID",
+        "in": "header",
+        "required": false,
+        "description": "Preserved across trusted service calls and events; response always exposes X-Correlation-ID. Invalid public header values are replaced with a generated ID.",
+        "schema": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9._:-]{1,100}$"
+        }
+      },
+      "IdempotencyKey": {
+        "name": "Idempotency-Key",
+        "in": "header",
+        "required": true,
+        "description": "Use the same key and identical request to retry. Reusing it with changed content returns 409. Human API keys are scoped to the authenticated subject, operation and resource.",
+        "schema": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        }
+      },
+      "CommandKey": {
+        "name": "Idempotency-Key",
+        "in": "header",
+        "required": true,
+        "description": "Caller-generated UUID command ID; persisted across retries. Reuse for a different submission, operation or business payload returns 409.",
+        "schema": {
+          "type": "string",
+          "format": "uuid"
+        }
+      }
+    }
+  }
+}

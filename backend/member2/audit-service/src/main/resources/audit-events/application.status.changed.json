@@ -1,0 +1,81 @@
+{
+  "eventType": "application.status.changed",
+  "producer": "orchestration-service",
+  "required": [
+    "status",
+    "processingHealth",
+    "workflowVersion",
+    "applicationRevision"
+  ],
+  "fields": {
+    "previousStatus": {
+      "anyOf": [
+        {
+          "enum": [
+            "DRAFT",
+            "SUBMITTED",
+            "ACTION_REQUIRED",
+            "CHECK_FAILED",
+            "ELIGIBILITY_CHECKING",
+            "NOT_ELIGIBLE",
+            "READY_FOR_LENDER",
+            "SUBMITTING",
+            "UNDER_REVIEW",
+            "INFORMATION_REQUIRED",
+            "MANUAL_REVIEW",
+            "APPROVED",
+            "OFFER_ACCEPTED",
+            "OFFER_DECLINED",
+            "OFFER_EXPIRED",
+            "REJECTED",
+            "CANCELLED"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "status": {
+      "enum": [
+        "DRAFT",
+        "SUBMITTED",
+        "ACTION_REQUIRED",
+        "CHECK_FAILED",
+        "ELIGIBILITY_CHECKING",
+        "NOT_ELIGIBLE",
+        "READY_FOR_LENDER",
+        "SUBMITTING",
+        "UNDER_REVIEW",
+        "INFORMATION_REQUIRED",
+        "MANUAL_REVIEW",
+        "APPROVED",
+        "OFFER_ACCEPTED",
+        "OFFER_DECLINED",
+        "OFFER_EXPIRED",
+        "REJECTED",
+        "CANCELLED"
+      ]
+    },
+    "processingHealth": {
+      "enum": [
+        "OK",
+        "RETRY_PENDING",
+        "OUTCOME_UNKNOWN",
+        "MANUAL_INTERVENTION_REQUIRED"
+      ]
+    },
+    "workflowVersion": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "applicationRevision": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "reasonCode": {
+      "type": "string",
+      "minLength": 1
+    }
+  }
+}

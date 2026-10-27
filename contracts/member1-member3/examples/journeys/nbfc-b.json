@@ -1,0 +1,412 @@
+{
+  "description": "Ordered contract examples; not database seed events. IDs must be those issued by live services for a real demonstration.",
+  "events": [
+    {
+      "eventId": "5482cf58-e677-5243-a4c2-502fee3fad61",
+      "eventType": "application.submitted",
+      "schemaVersion": "1.0",
+      "occurredAt": "2026-10-16T09:00:00Z",
+      "producer": "application-service",
+      "applicationId": "d9d19b98-9a1e-5e84-ae96-ba34a0d885e1",
+      "aggregateVersion": 1,
+      "correlationId": "demo-flow-nbfc-b-104",
+      "data": {
+        "sellerId": "SELLER-1001",
+        "sellerSubject": "seller-demo-104",
+        "marketplaceId": "dd77e60a-5273-5576-b177-e07066692696",
+        "marketplaceSellerId": "SELLER-104",
+        "applicationRevision": 1,
+        "requestedAmount": "500000.00",
+        "currency": "INR",
+        "loanPurpose": "PURCHASE_INVENTORY",
+        "businessProfile": {
+          "businessName": "Demo Clothing",
+          "displayName": "Demo Seller",
+          "businessStartDate": "2024-01-01"
+        },
+        "sellerRequestReference": "DEMO-104-001",
+        "status": "DRAFT"
+      },
+      "actor": {
+        "type": "SYSTEM_CLIENT",
+        "subject": "application-service"
+      },
+      "originActor": {
+        "type": "HUMAN",
+        "subject": "seller-demo-104"
+      }
+    },
+    {
+      "eventId": "44285e11-c962-5eec-8d62-d030e88bc716",
+      "eventType": "consent.updated",
+      "schemaVersion": "1.0",
+      "occurredAt": "2026-10-16T09:00:00Z",
+      "producer": "consent-verification-service",
+      "applicationId": "d9d19b98-9a1e-5e84-ae96-ba34a0d885e1",
+      "aggregateVersion": 1,
+      "correlationId": "demo-flow-nbfc-b-104",
+      "data": {
+        "consentId": "270a952a-e4d7-5cf2-b767-21fdb214f822",
+        "consentVersion": 1,
+        "status": "GRANTED",
+        "scopes": [
+          "MARKETPLACE_DATA_READ",
+          "IDENTITY_VERIFICATION",
+          "LENDER_APPLICATION_SHARE"
+        ],
+        "sourceMarketplaceIds": [
+          "dd77e60a-5273-5576-b177-e07066692696"
+        ],
+        "recipientLenderIds": [
+          "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb1",
+          "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb2"
+        ],
+        "purpose": "Evaluate this application and share with its selected lender",
+        "validityPolicy": "APPLICATION_OPEN",
+        "noticeVersion": "1.0",
+        "grantedAt": "2026-10-16T09:00:00Z"
+      },
+      "actor": {
+        "type": "SYSTEM_CLIENT",
+        "subject": "consent-verification-service"
+      },
+      "originActor": {
+        "type": "HUMAN",
+        "subject": "seller-demo-104"
+      }
+    },
+    {
+      "eventId": "5e000845-ac8a-546b-a884-65ec25bc0549",
+      "eventType": "verification.completed",
+      "schemaVersion": "1.0",
+      "occurredAt": "2026-10-16T09:00:00Z",
+      "producer": "consent-verification-service",
+      "applicationId": "d9d19b98-9a1e-5e84-ae96-ba34a0d885e1",
+      "aggregateVersion": 1,
+      "correlationId": "demo-flow-nbfc-b-104",
+      "data": {
+        "verificationId": "acdf4c26-0d4f-5bdb-9b55-ff5bce71fd77",
+        "applicationRevision": 1,
+        "status": "VERIFIED",
+        "checkedAt": "2026-10-16T09:00:00Z",
+        "fixtureIdentityId": "DEMO-VERIFIED-001",
+        "authorisedRetrievalReference": "demo-authorised-source-104"
+      },
+      "actor": {
+        "type": "SYSTEM_CLIENT",
+        "subject": "consent-verification-service"
+      },
+      "originActor": {
+        "type": "HUMAN",
+        "subject": "seller-demo-104"
+      }
+    },
+    {
+      "eventId": "a630e2a3-dbc0-50bf-a416-5e1d8c41fcbe",
+      "eventType": "eligibility.completed",
+      "schemaVersion": "1.0",
+      "occurredAt": "2026-10-16T09:00:00Z",
+      "producer": "eligibility-service",
+      "applicationId": "d9d19b98-9a1e-5e84-ae96-ba34a0d885e1",
+      "aggregateVersion": 1,
+      "correlationId": "demo-flow-nbfc-b-104",
+      "data": {
+        "eligibilityResultId": "aca57fc3-e36f-5198-a6f4-ac90320f9a12",
+        "applicationRevision": 1,
+        "verificationId": "acdf4c26-0d4f-5bdb-9b55-ff5bce71fd77",
+        "financialSnapshotId": "ce50965d-6fcc-5315-bbc0-50fa7487e9c3",
+        "evaluationRequestId": "127da96b-670c-55a0-844b-93c2b5575440",
+        "calculationVersion": "1.0",
+        "evaluatedAt": "2026-10-16T09:00:00Z",
+        "outcome": "EVALUATED",
+        "reasonCodes": [],
+        "lenderResults": [
+          {
+            "lenderId": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb2",
+            "productId": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa2",
+            "ruleVersion": "nbfc-b-v1",
+            "indicativeMaxAmount": "650000.00",
+            "eligible": true,
+            "reasonCodes": [],
+            "routingPriority": 1
+          }
+        ],
+        "applicationId": "d9d19b98-9a1e-5e84-ae96-ba34a0d885e1",
+        "asOfDate": "2026-10-13",
+        "requestedAmount": "500000.00",
+        "currency": "INR",
+        "averageMonthlyNetSales": "550000.00",
+        "averageMonthlyPayout": "530000.00",
+        "returnRatePercent": "8.33"
+      },
+      "actor": {
+        "type": "SYSTEM_CLIENT",
+        "subject": "eligibility-service"
+      },
+      "originActor": {
+        "type": "HUMAN",
+        "subject": "seller-demo-104"
+      }
+    },
+    {
+      "eventId": "e3c4396a-d033-5f80-ad33-0d45e6500ce1",
+      "eventType": "lender.application.submitted",
+      "schemaVersion": "1.0",
+      "occurredAt": "2026-10-16T09:00:00Z",
+      "producer": "lender-integration-service",
+      "applicationId": "d9d19b98-9a1e-5e84-ae96-ba34a0d885e1",
+      "aggregateVersion": 1,
+      "correlationId": "demo-flow-nbfc-b-104",
+      "data": {
+        "submissionId": "6c62a5b9-2002-5fac-9c63-55d60748572c",
+        "applicationRevision": 1,
+        "lenderId": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb2",
+        "lenderApplicationId": "NB-6c62a5b9-2002-5fac-9c63-55d60748572c",
+        "receivedAt": "2026-10-16T09:00:00Z"
+      },
+      "actor": {
+        "type": "SYSTEM_CLIENT",
+        "subject": "lender-integration-service"
+      },
+      "originActor": {
+        "type": "HUMAN",
+        "subject": "seller-demo-104"
+      }
+    },
+    {
+      "eventId": "a5a6747c-8d19-5e0e-8e54-3f1e5035e4da",
+      "eventType": "lender.information.requested",
+      "schemaVersion": "1.0",
+      "occurredAt": "2026-10-16T09:00:00Z",
+      "producer": "lender-integration-service",
+      "applicationId": "d9d19b98-9a1e-5e84-ae96-ba34a0d885e1",
+      "aggregateVersion": 2,
+      "correlationId": "demo-flow-nbfc-b-104",
+      "data": {
+        "submissionId": "6c62a5b9-2002-5fac-9c63-55d60748572c",
+        "applicationRevision": 1,
+        "lenderId": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb2",
+        "lenderApplicationId": "NB-6c62a5b9-2002-5fac-9c63-55d60748572c",
+        "informationRequestId": "abe780bb-f4ae-54f3-9e52-953e980d4323",
+        "questions": [
+          {
+            "questionId": "purpose-detail",
+            "prompt": "Describe the inventory purchase."
+          }
+        ]
+      },
+      "actor": {
+        "type": "SYSTEM_CLIENT",
+        "subject": "lender-integration-service"
+      },
+      "originActor": {
+        "type": "HUMAN",
+        "subject": "seller-demo-104"
+      }
+    },
+    {
+      "eventId": "e745d6bf-73f0-5430-850c-236394b30193",
+      "eventType": "lender.information.response.recorded",
+      "schemaVersion": "1.0",
+      "occurredAt": "2026-10-16T09:00:00Z",
+      "producer": "orchestration-service",
+      "applicationId": "d9d19b98-9a1e-5e84-ae96-ba34a0d885e1",
+      "aggregateVersion": 7,
+      "correlationId": "demo-flow-nbfc-b-104",
+      "data": {
+        "informationRequestId": "abe780bb-f4ae-54f3-9e52-953e980d4323",
+        "submissionId": "6c62a5b9-2002-5fac-9c63-55d60748572c"
+      },
+      "actor": {
+        "type": "HUMAN",
+        "subject": "seller-demo-104"
+      },
+      "originActor": {
+        "type": "HUMAN",
+        "subject": "seller-demo-104"
+      }
+    },
+    {
+      "eventId": "c692eb3b-3173-51b5-b4c1-44955bf89576",
+      "eventType": "lender.information.answered",
+      "schemaVersion": "1.0",
+      "occurredAt": "2026-10-16T09:00:00Z",
+      "producer": "lender-integration-service",
+      "applicationId": "d9d19b98-9a1e-5e84-ae96-ba34a0d885e1",
+      "aggregateVersion": 3,
+      "correlationId": "demo-flow-nbfc-b-104",
+      "data": {
+        "submissionId": "6c62a5b9-2002-5fac-9c63-55d60748572c",
+        "applicationRevision": 1,
+        "lenderId": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb2",
+        "lenderApplicationId": "NB-6c62a5b9-2002-5fac-9c63-55d60748572c",
+        "informationRequestId": "abe780bb-f4ae-54f3-9e52-953e980d4323",
+        "answers": [
+          {
+            "questionId": "purpose-detail",
+            "answerText": "Seasonal inventory from a fictional supplier."
+          }
+        ],
+        "syntheticDocumentReferences": [
+          "synthetic://documents/demo-invoice"
+        ],
+        "lenderAcknowledgementStatus": "ACKNOWLEDGED"
+      },
+      "actor": {
+        "type": "SYSTEM_CLIENT",
+        "subject": "lender-integration-service"
+      },
+      "originActor": {
+        "type": "HUMAN",
+        "subject": "seller-demo-104"
+      }
+    },
+    {
+      "eventId": "d37b62d0-2496-5743-bcc1-75ca673bfb60",
+      "eventType": "lender.decision.received",
+      "schemaVersion": "1.0",
+      "occurredAt": "2026-10-16T09:00:00Z",
+      "producer": "lender-integration-service",
+      "applicationId": "d9d19b98-9a1e-5e84-ae96-ba34a0d885e1",
+      "aggregateVersion": 4,
+      "correlationId": "demo-flow-nbfc-b-104",
+      "data": {
+        "submissionId": "6c62a5b9-2002-5fac-9c63-55d60748572c",
+        "applicationRevision": 1,
+        "lenderId": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb2",
+        "lenderApplicationId": "NB-6c62a5b9-2002-5fac-9c63-55d60748572c",
+        "decisionId": "5bd24c77-72c8-5a79-8788-651b0ba6dcb5",
+        "decision": "APPROVED",
+        "decidedAt": "2026-10-16T09:00:00Z"
+      },
+      "actor": {
+        "type": "SYSTEM_CLIENT",
+        "subject": "lender-integration-service"
+      },
+      "originActor": {
+        "type": "HUMAN",
+        "subject": "seller-demo-104"
+      }
+    },
+    {
+      "eventId": "ddeba8e8-bba9-57d1-94dd-8bfaed3b839b",
+      "eventType": "loan.offer.created",
+      "schemaVersion": "1.0",
+      "occurredAt": "2026-10-16T09:00:00Z",
+      "producer": "lender-integration-service",
+      "applicationId": "d9d19b98-9a1e-5e84-ae96-ba34a0d885e1",
+      "aggregateVersion": 5,
+      "correlationId": "demo-flow-nbfc-b-104",
+      "data": {
+        "submissionId": "6c62a5b9-2002-5fac-9c63-55d60748572c",
+        "applicationRevision": 1,
+        "lenderId": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb2",
+        "lenderApplicationId": "NB-6c62a5b9-2002-5fac-9c63-55d60748572c",
+        "offerId": "3e20f6cd-ba0d-5240-bf6c-297ad5e5ac19",
+        "offeredAmount": "500000.00",
+        "currency": "INR",
+        "annualInterestRatePercent": "12.5",
+        "interestRateType": "FIXED",
+        "tenureMonths": 24,
+        "repaymentFrequency": "MONTHLY",
+        "feesAmount": "2500.00",
+        "termsReference": "synthetic://terms/bank-a-v1",
+        "expiresAt": "2026-11-16T09:00:00Z",
+        "version": 0,
+        "status": "ACTIVE"
+      },
+      "actor": {
+        "type": "SYSTEM_CLIENT",
+        "subject": "lender-integration-service"
+      },
+      "originActor": {
+        "type": "HUMAN",
+        "subject": "seller-demo-104"
+      }
+    },
+    {
+      "eventId": "de5aa371-ec28-5d23-91b0-7c8e8a3e3735",
+      "eventType": "loan.offer.accepted",
+      "schemaVersion": "1.0",
+      "occurredAt": "2026-10-16T09:00:00Z",
+      "producer": "orchestration-service",
+      "applicationId": "d9d19b98-9a1e-5e84-ae96-ba34a0d885e1",
+      "aggregateVersion": 11,
+      "correlationId": "demo-flow-nbfc-b-104",
+      "data": {
+        "offerId": "3e20f6cd-ba0d-5240-bf6c-297ad5e5ac19",
+        "submissionId": "6c62a5b9-2002-5fac-9c63-55d60748572c",
+        "applicationRevision": 1,
+        "lenderId": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb2",
+        "operationAt": "2026-10-16T09:00:00Z",
+        "expectedOfferVersion": 0,
+        "lenderAcknowledgementStatus": "PENDING",
+        "acceptanceId": "c483fc05-7d14-5c47-bd93-ad8ce69ecf6c",
+        "acceptedAt": "2026-10-16T09:00:00Z"
+      },
+      "actor": {
+        "type": "HUMAN",
+        "subject": "seller-demo-104"
+      },
+      "originActor": {
+        "type": "HUMAN",
+        "subject": "seller-demo-104"
+      }
+    },
+    {
+      "eventId": "55f4a369-0855-5de3-8422-28fdd48615e6",
+      "eventType": "loan.offer.acknowledged",
+      "schemaVersion": "1.0",
+      "occurredAt": "2026-10-16T09:00:00Z",
+      "producer": "lender-integration-service",
+      "applicationId": "d9d19b98-9a1e-5e84-ae96-ba34a0d885e1",
+      "aggregateVersion": 6,
+      "correlationId": "demo-flow-nbfc-b-104",
+      "data": {
+        "submissionId": "6c62a5b9-2002-5fac-9c63-55d60748572c",
+        "applicationRevision": 1,
+        "lenderId": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb2",
+        "lenderApplicationId": "NB-6c62a5b9-2002-5fac-9c63-55d60748572c",
+        "offerId": "3e20f6cd-ba0d-5240-bf6c-297ad5e5ac19",
+        "acceptanceId": "c483fc05-7d14-5c47-bd93-ad8ce69ecf6c",
+        "acceptedAt": "2026-10-16T09:00:00Z",
+        "operationAt": "2026-10-16T09:00:00Z",
+        "expectedOfferVersion": 0,
+        "lenderAcknowledgementStatus": "ACKNOWLEDGED"
+      },
+      "actor": {
+        "type": "SYSTEM_CLIENT",
+        "subject": "lender-integration-service"
+      },
+      "originActor": {
+        "type": "HUMAN",
+        "subject": "seller-demo-104"
+      }
+    },
+    {
+      "eventId": "d5098f79-b430-5663-8a7a-59bbc11c9dc3",
+      "eventType": "application.status.changed",
+      "schemaVersion": "1.0",
+      "occurredAt": "2026-10-16T09:00:00Z",
+      "producer": "orchestration-service",
+      "applicationId": "d9d19b98-9a1e-5e84-ae96-ba34a0d885e1",
+      "aggregateVersion": 13,
+      "correlationId": "demo-flow-nbfc-b-104",
+      "data": {
+        "previousStatus": "APPROVED",
+        "status": "OFFER_ACCEPTED",
+        "processingHealth": "OK",
+        "workflowVersion": 12,
+        "applicationRevision": 1
+      },
+      "actor": {
+        "type": "SYSTEM_CLIENT",
+        "subject": "orchestration-service"
+      },
+      "originActor": {
+        "type": "HUMAN",
+        "subject": "seller-demo-104"
+      }
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "eligibilityResultId": "99999999-9999-4999-8999-999999999999",
+  "evaluationRequestId": "66666666-6666-4666-8666-666666666666",
+  "applicationId": "33333333-3333-4333-8333-333333333333",
+  "applicationRevision": 1,
+  "verificationId": "77777777-7777-4777-8777-777777777777",
+  "financialSnapshotId": "88888888-8888-4888-8888-888888888888",
+  "calculationVersion": "1.0",
+  "evaluatedAt": "2026-10-15T09:30:00Z",
+  "asOfDate": "2026-10-13",
+  "requestedAmount": "500000.00",
+  "currency": "INR",
+  "outcome": "ACTION_REQUIRED",
+  "reasonCodes": [
+    "FINANCIAL_DATA_INCOMPLETE"
+  ],
+  "lenderResults": []
+}

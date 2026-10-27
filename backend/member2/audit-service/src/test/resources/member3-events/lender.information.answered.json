@@ -1,0 +1,35 @@
+{
+  "eventId": "3e373010-302b-5763-b087-d4d4b996c71d",
+  "eventType": "lender.information.answered",
+  "schemaVersion": "1.0",
+  "occurredAt": "2026-10-16T09:00:00Z",
+  "producer": "lender-integration-service",
+  "applicationId": "52de19d2-1bea-5fd3-9685-868e1a7207b7",
+  "aggregateVersion": 1,
+  "correlationId": "demo-flow-bank-a-104",
+  "data": {
+    "submissionId": "147ef5e6-266b-5f82-bbf5-a34183361fc4",
+    "applicationRevision": 1,
+    "lenderId": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb1",
+    "lenderApplicationId": "BA-147ef5e6-266b-5f82-bbf5-a34183361fc4",
+    "informationRequestId": "6e3a445a-b737-53db-8726-85db6021d620",
+    "answers": [
+      {
+        "questionId": "purpose-detail",
+        "answerText": "Seasonal inventory from a fictional supplier."
+      }
+    ],
+    "syntheticDocumentReferences": [
+      "synthetic://documents/demo-invoice"
+    ],
+    "lenderAcknowledgementStatus": "ACKNOWLEDGED"
+  },
+  "actor": {
+    "type": "SYSTEM_CLIENT",
+    "subject": "lender-integration-service"
+  },
+  "originActor": {
+    "type": "HUMAN",
+    "subject": "seller-demo-104"
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "description": "Fictional verification cases for the training simulator. No external identity lookup occurs.",
+  "fixtures": [
+    {
+      "fixtureIdentityId": "DEMO-VERIFIED-001",
+      "status": "VERIFIED",
+      "message": "Fictional identity check passed."
+    },
+    {
+      "fixtureIdentityId": "DEMO-FAILED-001",
+      "status": "FAILED",
+      "reasonCode": "IDENTITY_CHECK_FAILED",
+      "message": "Fictional identity check failed."
+    },
+    {
+      "fixtureIdentityId": "DEMO-PENDING-001",
+      "status": "PENDING",
+      "reasonCode": "VERIFICATION_PENDING",
+      "message": "Fictional provider is still processing the check."
+    },
+    {
+      "fixtureIdentityId": "DEMO-ACTION-001",
+      "status": "ACTION_REQUIRED",
+      "reasonCode": "IDENTITY_INFORMATION_REQUIRED",
+      "message": "Provide or correct the fictional identity information."
+    }
+  ]
+}

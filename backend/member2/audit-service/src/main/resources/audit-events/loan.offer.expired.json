@@ -1,0 +1,18 @@
+{
+  "eventType": "loan.offer.expired",
+  "producer": "orchestration-service",
+  "required": [
+    "offerId",
+    "submissionId"
+  ],
+  "fields": {
+    "offerId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "submissionId": {
+      "type": "string",
+      "format": "uuid"
+    }
+  }
+}

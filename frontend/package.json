@@ -1,0 +1,14 @@
+{
+  "name": "credflow-frontend",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "CredFlow HTML CSS JavaScript lending workspace",
+  "scripts": {
+    "start": "node ../backend/web/server.mjs",
+    "test": "node --test tests/contracts.test.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

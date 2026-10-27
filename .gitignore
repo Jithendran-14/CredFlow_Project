@@ -1,0 +1,49 @@
+# Java build output
+**/target/
+*.class
+
+# Node dependencies
+**/node_modules/
+
+# Local credentials, RSA keys, database files and runtime state
+/backend/runtime/private/
+
+# Environment configuration; keep shareable examples
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# Logs, including rotated Kafka logs
+*.log
+*.log.*
+/logs/
+
+# IDE and workspace files
+**/.metadata/
+**/.settings/
+.idea/
+*.iml
+
+# Local verification output
+/verification/local/
+
+# Database exports
+*.dmp
+
+# Private keys and keystores
+**/*private.pem
+*.key
+*.p12
+*.pfx
+*.jks
+
+# Local backup copies
+*.before-*
+*.bak
+*.tmp
+
+# Operating system files
+Thumbs.db
+Desktop.ini
+.DS_Store

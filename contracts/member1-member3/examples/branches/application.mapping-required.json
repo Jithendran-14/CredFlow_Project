@@ -1,0 +1,33 @@
+{
+  "eventId": "581691cb-812a-45e9-83cf-6fc10dab47e8",
+  "eventType": "application.submitted",
+  "schemaVersion": "1.0",
+  "occurredAt": "2026-10-16T09:00:00Z",
+  "producer": "application-service",
+  "applicationId": "52de19d2-1bea-5fd3-9685-868e1a7207b7",
+  "aggregateVersion": 1,
+  "correlationId": "demo-flow-bank-a-104",
+  "data": {
+    "sellerId": null,
+    "marketplaceId": "dd77e60a-5273-5576-b177-e07066692696",
+    "applicationRevision": 1,
+    "requestedAmount": "500000.00",
+    "currency": "INR",
+    "loanPurpose": "PURCHASE_INVENTORY",
+    "businessProfile": {
+      "businessName": "Demo Clothing",
+      "displayName": "Demo Seller",
+      "businessStartDate": "2024-01-01"
+    },
+    "sellerRequestReference": "DEMO-104-001",
+    "status": "DRAFT"
+  },
+  "actor": {
+    "type": "SYSTEM_CLIENT",
+    "subject": "application-service"
+  },
+  "originActor": {
+    "type": "HUMAN",
+    "subject": "seller-demo-104"
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Eligibility operation status",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "operationId",
+    "applicationId",
+    "applicationRevision",
+    "status",
+    "createdAt"
+  ],
+  "properties": {
+    "operationId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "applicationId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "applicationRevision": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "PENDING",
+        "RUNNING",
+        "SUCCEEDED",
+        "FAILED"
+      ],
+      "description": "Current intake creates PENDING only. The execution worker and remaining transitions are not implemented."
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "eligibilityResultId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "errorCode": {
+      "type": "string"
+    }
+  }
+}

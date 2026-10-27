@@ -1,0 +1,34 @@
+{
+  "eventId": "63186c6e-0a89-52a8-8304-c8b7b8ba97d8",
+  "eventType": "loan.offer.acknowledged",
+  "schemaVersion": "1.0",
+  "occurredAt": "2026-10-16T09:00:00Z",
+  "producer": "lender-integration-service",
+  "applicationId": "52de19d2-1bea-5fd3-9685-868e1a7207b7",
+  "aggregateVersion": 1,
+  "correlationId": "demo-flow-bank-a-104",
+  "data": {
+    "submissionId": "147ef5e6-266b-5f82-bbf5-a34183361fc4",
+    "applicationRevision": 1,
+    "lenderId": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb1",
+    "lenderApplicationId": "BA-147ef5e6-266b-5f82-bbf5-a34183361fc4",
+    "offerId": "5c149b12-3116-5cd5-bb69-71e241f95f0f",
+    "acceptanceId": "7b9e6e31-ca8f-583c-843a-308128ae7c95",
+    "acceptedAt": "2026-10-16T09:00:00Z",
+    "operationAt": "2026-10-16T09:00:00Z",
+    "expectedOfferVersion": 0,
+    "lenderAcknowledgementStatus": "FAILED",
+    "taskId": "7b9e6e31-ca8f-583c-843a-308128ae7c95",
+    "operation": "ACCEPT_OFFER",
+    "failureCode": "DELIVERY_RETRIES_EXHAUSTED",
+    "outcomeUnknown": true
+  },
+  "actor": {
+    "type": "SYSTEM_CLIENT",
+    "subject": "lender-integration-service"
+  },
+  "originActor": {
+    "type": "HUMAN",
+    "subject": "seller-demo-104"
+  }
+}

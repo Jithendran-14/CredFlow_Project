@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "DRAFT Orchestration evaluation request v1",
+  "description": "Proposal for team review. No corresponding business HTTP endpoint or event producer is implemented yet.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "evaluationRequestId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "applicationId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "applicationRevision": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "verificationId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "asOfDate": {
+      "type": "string",
+      "format": "date"
+    },
+    "authorisedRetrievalReference": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 255
+    }
+  },
+  "required": [
+    "evaluationRequestId",
+    "applicationId",
+    "applicationRevision",
+    "verificationId",
+    "asOfDate",
+    "authorisedRetrievalReference"
+  ]
+}

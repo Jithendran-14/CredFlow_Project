@@ -1,0 +1,37 @@
+{
+  "eventType": "verification.completed",
+  "producer": "consent-verification-service",
+  "required": [
+    "verificationId",
+    "applicationRevision",
+    "status",
+    "checkedAt"
+  ],
+  "fields": {
+    "verificationId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "applicationRevision": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "VERIFIED",
+        "FAILED",
+        "PENDING",
+        "ACTION_REQUIRED"
+      ]
+    },
+    "checkedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "reasonCode": {
+      "type": "string",
+      "pattern": "^[A-Z][A-Z0-9_]{0,99}$"
+    }
+  }
+}

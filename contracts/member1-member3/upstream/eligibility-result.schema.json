@@ -1,0 +1,238 @@
+{
+  "type": "object",
+  "properties": {
+    "eligibilityResultId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "applicationRevision": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "verificationId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "financialSnapshotId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "evaluationRequestId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "calculationVersion": {
+      "type": "string",
+      "minLength": 1
+    },
+    "evaluatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "outcome": {
+      "enum": [
+        "EVALUATED",
+        "ACTION_REQUIRED"
+      ]
+    },
+    "reasonCodes": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 0
+    },
+    "lenderResults": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "lenderId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "productId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "ruleVersion": {
+            "type": "string",
+            "minLength": 1
+          },
+          "indicativeMaxAmount": {
+            "type": "string",
+            "pattern": "^[0-9]{1,17}\\.[0-9]{2}$"
+          },
+          "eligible": {
+            "type": "boolean"
+          },
+          "reasonCodes": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "minItems": 0
+          },
+          "routingPriority": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "estimatedMonthlyPayment": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "lenderId",
+          "productId",
+          "ruleVersion",
+          "indicativeMaxAmount",
+          "eligible",
+          "reasonCodes",
+          "routingPriority"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 0
+    },
+    "applicationId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "asOfDate": {
+      "type": "string",
+      "format": "date"
+    },
+    "requestedAmount": {
+      "type": "string",
+      "pattern": "^[0-9]{1,17}\\.[0-9]{2}$",
+      "not": {
+        "pattern": "^0+\\.00$"
+      }
+    },
+    "currency": {
+      "const": "INR"
+    },
+    "averageMonthlyNetSales": {
+      "type": "string",
+      "pattern": "^[0-9]{1,17}\\.[0-9]{2}$"
+    },
+    "averageMonthlyPayout": {
+      "type": "string",
+      "pattern": "^[0-9]{1,17}\\.[0-9]{2}$"
+    },
+    "returnRatePercent": {
+      "type": "string",
+      "pattern": "^(?:[0-9]{1,2}\\.[0-9]{2}|100\\.00)$"
+    },
+    "creditScoreBand": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "monthlySurplus": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  },
+  "required": [
+    "eligibilityResultId",
+    "applicationRevision",
+    "verificationId",
+    "financialSnapshotId",
+    "evaluationRequestId",
+    "calculationVersion",
+    "evaluatedAt",
+    "outcome",
+    "reasonCodes",
+    "lenderResults",
+    "applicationId",
+    "asOfDate",
+    "requestedAmount",
+    "currency"
+  ],
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "outcome": {
+            "const": "ACTION_REQUIRED"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "lenderResults": {
+            "maxItems": 0
+          },
+          "reasonCodes": {
+            "contains": {
+              "enum": [
+                "FINANCIAL_DATA_INCOMPLETE",
+                "FINANCIAL_DATA_INCONSISTENT",
+                "FINANCIAL_DATA_INSUFFICIENT"
+              ]
+            }
+          },
+          "creditScoreBand": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "monthlySurplus": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "outcome": {
+            "const": "EVALUATED"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "lenderResults": {
+            "minItems": 1
+          },
+          "creditScoreBand": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "monthlySurplus": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "averageMonthlyNetSales",
+          "averageMonthlyPayout",
+          "returnRatePercent"
+        ]
+      }
+    }
+  ],
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://credflow.local/contracts/upstream/eligibility-result.schema.json",
+  "title": "Member 2 Eligibility result response",
+  "description": "Member 2 response-adapter shape; GET business HTTP endpoint is proposed. Validating this shape does not prove the endpoint is deployed."
+}

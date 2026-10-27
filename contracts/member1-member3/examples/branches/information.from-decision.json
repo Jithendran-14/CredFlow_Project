@@ -1,0 +1,34 @@
+{
+  "eventId": "516d8f30-ac9a-5457-9bf3-e7d4bf6e0d13",
+  "eventType": "lender.information.requested",
+  "schemaVersion": "1.0",
+  "occurredAt": "2026-10-16T09:00:00Z",
+  "producer": "lender-integration-service",
+  "applicationId": "52de19d2-1bea-5fd3-9685-868e1a7207b7",
+  "aggregateVersion": 1,
+  "correlationId": "demo-flow-bank-a-104",
+  "data": {
+    "submissionId": "147ef5e6-266b-5f82-bbf5-a34183361fc4",
+    "applicationRevision": 1,
+    "lenderId": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb1",
+    "lenderApplicationId": "BA-147ef5e6-266b-5f82-bbf5-a34183361fc4",
+    "decisionId": "4f83bc6a-cb9a-578e-a9be-9c9aefc8231f",
+    "decision": "ACTION_REQUIRED",
+    "decidedAt": "2026-10-16T09:00:00Z",
+    "informationRequestId": "6e3a445a-b737-53db-8726-85db6021d620",
+    "questions": [
+      {
+        "questionId": "purpose-detail",
+        "prompt": "Describe the inventory purchase."
+      }
+    ]
+  },
+  "actor": {
+    "type": "SYSTEM_CLIENT",
+    "subject": "lender-integration-service"
+  },
+  "originActor": {
+    "type": "HUMAN",
+    "subject": "seller-demo-104"
+  }
+}

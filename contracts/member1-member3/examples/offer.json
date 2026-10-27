@@ -1,0 +1,16 @@
+{
+  "offerId": "5c149b12-3116-5cd5-bb69-71e241f95f0f",
+  "offeredAmount": "500000.00",
+  "currency": "INR",
+  "annualInterestRatePercent": "12.5",
+  "interestRateType": "FIXED",
+  "tenureMonths": 24,
+  "repaymentFrequency": "MONTHLY",
+  "feesAmount": "2500.00",
+  "termsReference": "synthetic://terms/bank-a-v1",
+  "expiresAt": "2026-11-16T09:00:00Z",
+  "version": 0,
+  "submissionId": "147ef5e6-266b-5f82-bbf5-a34183361fc4",
+  "status": "ACTIVE",
+  "lenderAcknowledgementStatus": "PENDING"
+}

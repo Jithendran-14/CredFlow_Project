@@ -1,0 +1,54 @@
+{
+  "eventType": "lender.information.requested",
+  "producer": "lender-integration-service",
+  "required": [
+    "submissionId",
+    "applicationRevision",
+    "lenderId",
+    "lenderApplicationId",
+    "informationRequestId",
+    "questions"
+  ],
+  "fields": {
+    "applicationId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "submissionId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "applicationRevision": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "lenderId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "lenderApplicationId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 120
+    },
+    "informationRequestId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "decisionId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "decision": {
+      "const": "INFORMATION_REQUIRED"
+    },
+    "decidedAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

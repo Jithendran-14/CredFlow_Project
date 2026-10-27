@@ -1,0 +1,40 @@
+server:
+  port: 8085
+
+spring:
+  application:
+    name: auth-service
+
+  datasource:
+    url: jdbc:oracle:thin:@//localhost:1521/FREEPDB1
+    username: ${CREDFLOW_AUTH_DB_USERNAME}
+    password: ${CREDFLOW_AUTH_DB_PASSWORD}
+    driver-class-name: oracle.jdbc.OracleDriver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never
+
+credflow:
+  jwt:
+    issuer: credflow-auth
+    audience: credflow-api
+    expiry-minutes: 15
+    private-key-path: ${CREDFLOW_PRIVATE_KEY_PATH}
+    public-key-path: ${CREDFLOW_PUBLIC_KEY_PATH}
+
+  bootstrap-admin:
+    enabled: ${CREDFLOW_BOOTSTRAP_ADMIN_ENABLED:false}

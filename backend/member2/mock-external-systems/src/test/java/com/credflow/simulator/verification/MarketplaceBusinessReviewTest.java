@@ -1,0 +1,8 @@
+package com.credflow.simulator.verification;
+import java.util.*;import com.fasterxml.jackson.databind.ObjectMapper;import com.credflow.simulator.history.MarketplaceHistorySource;import org.junit.jupiter.api.Test;
+import static org.mockito.Mockito.*;import static org.junit.jupiter.api.Assertions.*;
+class MarketplaceBusinessReviewTest {
+ @Test void financialEntryDoesNotAutomaticallyVerifyBusinessDetails(){var source=mock(MarketplaceHistorySource.class);when(source.businessReviewed("DEMO-MARKETPLACE-TEST")).thenReturn(Optional.of(false));var simulator=new VerificationSimulator(new ObjectMapper(),source);var result=simulator.verify(new VerificationSimulator.Request(UUID.randomUUID(),UUID.randomUUID(),1,"DEMO-MARKETPLACE-TEST"));assertEquals(VerificationSimulator.Status.ACTION_REQUIRED,result.status());assertEquals("BUSINESS_DETAILS_REVIEW_REQUIRED",result.reasonCode());}
+ @Test void explicitSavedBusinessReviewFeedsOnlyLocalSimulator(){var source=mock(MarketplaceHistorySource.class);when(source.businessReviewed("DEMO-MARKETPLACE-TEST")).thenReturn(Optional.of(true));var simulator=new VerificationSimulator(new ObjectMapper(),source);assertEquals(VerificationSimulator.Status.VERIFIED,simulator.verify(new VerificationSimulator.Request(UUID.randomUUID(),UUID.randomUUID(),1,"DEMO-MARKETPLACE-TEST")).status());}
+ @Test void unknownRegistrationIsNotSilentlyVerified(){var source=mock(MarketplaceHistorySource.class);when(source.businessReviewed(anyString())).thenReturn(Optional.empty());var simulator=new VerificationSimulator(new ObjectMapper(),source);assertThrows(VerificationSimulator.UnknownFixtureException.class,()->simulator.verify(new VerificationSimulator.Request(UUID.randomUUID(),UUID.randomUUID(),1,"DEMO-MARKETPLACE-UNKNOWN")));}
+}

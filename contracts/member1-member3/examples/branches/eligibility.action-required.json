@@ -1,0 +1,36 @@
+{
+  "eventId": "6a0a4c99-7735-53ae-9621-a120d9c3777b",
+  "eventType": "eligibility.completed",
+  "schemaVersion": "1.0",
+  "occurredAt": "2026-10-16T09:00:00Z",
+  "producer": "eligibility-service",
+  "applicationId": "52de19d2-1bea-5fd3-9685-868e1a7207b7",
+  "aggregateVersion": 1,
+  "correlationId": "demo-flow-bank-a-104",
+  "data": {
+    "eligibilityResultId": "ca4fe04d-ca50-5bd7-89a7-645c4309e180",
+    "applicationRevision": 1,
+    "verificationId": "f2e0a9b4-794d-5340-9b34-5a1fd1153469",
+    "financialSnapshotId": "2aa93b3c-cc29-5f3d-a246-59b046868c87",
+    "evaluationRequestId": "45345dea-8054-5f80-ac97-7d471d9c88b8",
+    "calculationVersion": "1.0",
+    "evaluatedAt": "2026-10-16T09:00:00Z",
+    "outcome": "ACTION_REQUIRED",
+    "reasonCodes": [
+      "FINANCIAL_DATA_INCOMPLETE"
+    ],
+    "lenderResults": [],
+    "applicationId": "52de19d2-1bea-5fd3-9685-868e1a7207b7",
+    "asOfDate": "2026-10-13",
+    "requestedAmount": "500000.00",
+    "currency": "INR"
+  },
+  "actor": {
+    "type": "SYSTEM_CLIENT",
+    "subject": "eligibility-service"
+  },
+  "originActor": {
+    "type": "HUMAN",
+    "subject": "seller-demo-104"
+  }
+}

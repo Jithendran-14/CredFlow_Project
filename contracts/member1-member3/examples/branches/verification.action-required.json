@@ -1,0 +1,26 @@
+{
+  "eventId": "6ee03e0c-f3a8-5ad6-81ed-4a412e7de430",
+  "eventType": "verification.completed",
+  "schemaVersion": "1.0",
+  "occurredAt": "2026-10-16T09:00:00Z",
+  "producer": "consent-verification-service",
+  "applicationId": "52de19d2-1bea-5fd3-9685-868e1a7207b7",
+  "aggregateVersion": 1,
+  "correlationId": "demo-flow-bank-a-104",
+  "data": {
+    "verificationId": "f2e0a9b4-794d-5340-9b34-5a1fd1153469",
+    "applicationRevision": 1,
+    "status": "ACTION_REQUIRED",
+    "checkedAt": "2026-10-16T09:00:00Z",
+    "fixtureIdentityId": "SYNTHETIC-VERIFIED-104",
+    "reasonCode": "CORRECTION_REQUIRED"
+  },
+  "actor": {
+    "type": "SYSTEM_CLIENT",
+    "subject": "consent-verification-service"
+  },
+  "originActor": {
+    "type": "HUMAN",
+    "subject": "seller-demo-104"
+  }
+}

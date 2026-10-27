@@ -1,0 +1,84 @@
+{
+  "eventType": "lender.processing.recovered",
+  "producer": "lender-integration-service",
+  "required": [
+    "submissionId",
+    "applicationRevision",
+    "lenderId",
+    "taskId",
+    "operation"
+  ],
+  "fields": {
+    "applicationId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "submissionId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "applicationRevision": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "lenderId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "lenderApplicationId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 120
+    },
+    "taskId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "callbackEventId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "decisionId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "informationRequestId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "offerId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "acceptanceId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "cancellationId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "operation": {
+      "enum": [
+        "SUBMIT",
+        "DECISION",
+        "REQUEST_INFORMATION",
+        "ANSWER_INFORMATION",
+        "CREATE_OFFER",
+        "WITHDRAW_OFFER",
+        "ACCEPT_OFFER",
+        "DECLINE_OFFER",
+        "CANCEL",
+        "CALLBACK"
+      ]
+    },
+    "processingHealth": {
+      "enum": [
+        "OK",
+        "RETRY_PENDING",
+        "OUTCOME_UNKNOWN",
+        "MANUAL_INTERVENTION_REQUIRED"
+      ]
+    }
+  }
+}

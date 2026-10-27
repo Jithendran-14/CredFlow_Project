@@ -1,0 +1,132 @@
+{
+  "schemaVersion": "1.0",
+  "envelope": "event-envelope.schema.json",
+  "events": [
+    {
+      "topic": "application.submitted",
+      "producer": "application-service",
+      "schema": "application.submitted.schema.json",
+      "fixture": "../examples/events/application.submitted.json"
+    },
+    {
+      "topic": "application.revised",
+      "producer": "application-service",
+      "schema": "application.revised.schema.json",
+      "fixture": "../examples/events/application.revised.json"
+    },
+    {
+      "topic": "consent.updated",
+      "producer": "consent-verification-service",
+      "schema": "consent.updated.schema.json",
+      "fixture": "../examples/events/consent.updated.json"
+    },
+    {
+      "topic": "verification.completed",
+      "producer": "consent-verification-service",
+      "schema": "verification.completed.schema.json",
+      "fixture": "../examples/events/verification.completed.json"
+    },
+    {
+      "topic": "eligibility.completed",
+      "producer": "eligibility-service",
+      "schema": "eligibility.completed.schema.json",
+      "fixture": "../examples/events/eligibility.completed.json"
+    },
+    {
+      "topic": "lender.application.submitted",
+      "producer": "lender-integration-service",
+      "schema": "lender.application.submitted.schema.json",
+      "fixture": "../examples/events/lender.application.submitted.json"
+    },
+    {
+      "topic": "lender.information.requested",
+      "producer": "lender-integration-service",
+      "schema": "lender.information.requested.schema.json",
+      "fixture": "../examples/events/lender.information.requested.json"
+    },
+    {
+      "topic": "lender.information.answered",
+      "producer": "lender-integration-service",
+      "schema": "lender.information.answered.schema.json",
+      "fixture": "../examples/events/lender.information.answered.json"
+    },
+    {
+      "topic": "lender.decision.received",
+      "producer": "lender-integration-service",
+      "schema": "lender.decision.received.schema.json",
+      "fixture": "../examples/events/lender.decision.received.json"
+    },
+    {
+      "topic": "loan.offer.created",
+      "producer": "lender-integration-service",
+      "schema": "loan.offer.created.schema.json",
+      "fixture": "../examples/events/loan.offer.created.json"
+    },
+    {
+      "topic": "loan.offer.withdrawn",
+      "producer": "lender-integration-service",
+      "schema": "loan.offer.withdrawn.schema.json",
+      "fixture": "../examples/events/loan.offer.withdrawn.json"
+    },
+    {
+      "topic": "loan.offer.acknowledged",
+      "producer": "lender-integration-service",
+      "schema": "loan.offer.acknowledged.schema.json",
+      "fixture": "../examples/events/loan.offer.acknowledged.json"
+    },
+    {
+      "topic": "lender.cancellation.acknowledged",
+      "producer": "lender-integration-service",
+      "schema": "lender.cancellation.acknowledged.schema.json",
+      "fixture": "../examples/events/lender.cancellation.acknowledged.json"
+    },
+    {
+      "topic": "lender.processing.failed",
+      "producer": "lender-integration-service",
+      "schema": "lender.processing.failed.schema.json",
+      "fixture": "../examples/events/lender.processing.failed.json"
+    },
+    {
+      "topic": "lender.processing.recovered",
+      "producer": "lender-integration-service",
+      "schema": "lender.processing.recovered.schema.json",
+      "fixture": "../examples/events/lender.processing.recovered.json"
+    },
+    {
+      "topic": "lender.information.response.recorded",
+      "producer": "orchestration-service",
+      "schema": "lender.information.response.recorded.schema.json",
+      "fixture": "../examples/events/lender.information.response.recorded.json"
+    },
+    {
+      "topic": "loan.offer.accepted",
+      "producer": "orchestration-service",
+      "schema": "loan.offer.accepted.schema.json",
+      "fixture": "../examples/events/loan.offer.accepted.json"
+    },
+    {
+      "topic": "loan.offer.declined",
+      "producer": "orchestration-service",
+      "schema": "loan.offer.declined.schema.json",
+      "fixture": "../examples/events/loan.offer.declined.json"
+    },
+    {
+      "topic": "loan.offer.expired",
+      "producer": "orchestration-service",
+      "schema": "loan.offer.expired.schema.json",
+      "fixture": "../examples/events/loan.offer.expired.json"
+    },
+    {
+      "topic": "application.status.changed",
+      "producer": "orchestration-service",
+      "schema": "application.status.changed.schema.json",
+      "fixture": "../examples/events/application.status.changed.json"
+    },
+    {
+      "topic": "consent.applied",
+      "producer": "orchestration-service",
+      "schema": "consent.applied.schema.json",
+      "fixture": "../examples/events/consent.applied.json"
+    }
+  ]
+}

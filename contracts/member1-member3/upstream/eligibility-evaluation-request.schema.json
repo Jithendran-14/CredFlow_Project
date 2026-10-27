@@ -1,0 +1,43 @@
+{
+  "type": "object",
+  "properties": {
+    "evaluationRequestId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "applicationId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "applicationRevision": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "verificationId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "asOfDate": {
+      "type": "string",
+      "format": "date"
+    },
+    "authorisedRetrievalReference": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 255
+    }
+  },
+  "required": [
+    "evaluationRequestId",
+    "applicationId",
+    "applicationRevision",
+    "verificationId",
+    "asOfDate",
+    "authorisedRetrievalReference"
+  ],
+  "additionalProperties": false,
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://credflow.local/contracts/upstream/eligibility-evaluation-request.schema.json",
+  "title": "Request Eligibility evaluation",
+  "description": "POST /internal/v1/eligibility/evaluations at the proposed Member 2 business HTTP boundary. Exact six business fields. Eligibility owns the snapshot. No caller-supplied figures or snapshot ID."
+}

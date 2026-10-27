@@ -1,0 +1,17 @@
+server.address=127.0.0.1
+server.port=8093
+spring.datasource.url=jdbc:oracle:thin:@//localhost:1521/FREEPDB1
+spring.datasource.username=CF_SIM_BANK_C
+spring.datasource.password=CHANGE_ME
+spring.jpa.hibernate.ddl-auto=validate
+credflow.security.issuer=credflow-auth
+credflow.security.audience=credflow-api
+credflow.security.public-key-location=file:C:/innovation/CredFlow/backend/runtime/private/auth-public.pem
+credflow.security.jwk-set-uri=
+credflow.security.role-mode=FLAT
+credflow.oauth.token-url=http://127.0.0.1:8085/oauth2/token
+credflow.events.enabled=false
+credflow.oauth.clients.system.client-id=mock-bank-c
+credflow.oauth.clients.system.client-secret=CHANGE_ME
+credflow.oauth.clients.bank-c-callback.client-id=mock-bank-c
+credflow.oauth.clients.bank-c-callback.client-secret=CHANGE_ME

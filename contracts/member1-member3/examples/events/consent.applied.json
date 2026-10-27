@@ -1,0 +1,23 @@
+{
+  "eventId": "424b4963-be80-54fe-8139-ea727a414292",
+  "eventType": "consent.applied",
+  "schemaVersion": "1.0",
+  "occurredAt": "2026-10-16T09:00:00Z",
+  "producer": "orchestration-service",
+  "applicationId": "52de19d2-1bea-5fd3-9685-868e1a7207b7",
+  "aggregateVersion": 1,
+  "correlationId": "demo-flow-bank-a-104",
+  "data": {
+    "operationId": "17ac0283-e643-5385-b578-d098df349394",
+    "consentId": "cde7715d-fd28-5620-b755-d01d014968bc",
+    "consentVersion": 1
+  },
+  "actor": {
+    "type": "SYSTEM_CLIENT",
+    "subject": "orchestration-service"
+  },
+  "originActor": {
+    "type": "HUMAN",
+    "subject": "seller-demo-104"
+  }
+}
