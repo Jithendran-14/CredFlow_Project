@@ -22,34 +22,21 @@ import jakarta.validation.Valid;
 @RequestMapping("/api/v1/applications")
 public class ConsentController {
 
-    private final ConsentDecisionService service;
+	private final ConsentDecisionService service;
 
-    public ConsentController(ConsentDecisionService service) {
-        this.service = service;
-    }
+	public ConsentController(ConsentDecisionService service) {
+		this.service = service;
+	}
 
-    @PostMapping("/{applicationId}/consents")
-    public ResponseEntity<ConsentDecisionResponse> record(
-            @PathVariable("applicationId") UUID applicationId,
-            @Valid @RequestBody ConsentDecisionRequest request,
-            @RequestHeader(
-                    value = "Idempotency-Key",
-                    required = false
-            ) String idempotencyKey,
-            @RequestHeader(
-                    value = "X-Correlation-ID",
-                    required = false
-            ) String correlationId,
-            @AuthenticationPrincipal Jwt jwt) {
+	@PostMapping("/{applicationId}/consents")
+	public ResponseEntity<ConsentDecisionResponse> record(@PathVariable("applicationId") UUID applicationId,
+			@Valid @RequestBody ConsentDecisionRequest request,
+			@RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey,
+			@RequestHeader(value = "X-Correlation-ID", required = false) String correlationId,
+			@AuthenticationPrincipal Jwt jwt) {
 
-        var response = service.record(
-                applicationId,
-                request,
-                idempotencyKey,
-                correlationId,
-                jwt
-        );
+		var response = service.record(applicationId, request, idempotencyKey, correlationId, jwt);
 
-        return ResponseEntity.accepted().body(response);
-    }
+		return ResponseEntity.accepted().body(response);
+	}
 }

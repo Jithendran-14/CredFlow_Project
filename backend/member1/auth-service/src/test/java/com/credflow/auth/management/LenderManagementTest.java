@@ -1,10 +1,64 @@
 package com.credflow.auth.management;
-import java.util.*;import org.junit.jupiter.api.Test;import org.springframework.jdbc.core.JdbcTemplate;import org.springframework.security.oauth2.jwt.Jwt;import org.springframework.security.crypto.password.PasswordEncoder;import com.credflow.auth.repository.AuthUserRepository;import static org.mockito.Mockito.*;import static org.mockito.ArgumentMatchers.*;import static org.junit.jupiter.api.Assertions.*;
+
+import java.util.*;
+import org.junit.jupiter.api.Test;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import com.credflow.auth.repository.AuthUserRepository;
+import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.junit.jupiter.api.Assertions.*;
+
 class LenderManagementTest {
- final JdbcTemplate db=mock(JdbcTemplate.class);final AuthUserRepository users=mock(AuthUserRepository.class);final PasswordEncoder encoder=mock(PasswordEncoder.class);final LenderManagement service=new LenderManagement(db,users,encoder);
- Jwt jwt(String role){return Jwt.withTokenValue("unit").header("alg","RS256").subject("admin").claim("roles",List.of(role)).build();}
- LenderInput input(){return new LenderInput("Test Bank","test-bank","BANK","test.officer","officer@example.test","ChosenPassword123","Onboard lender");}
- @Test void onlyAdminCanCreateLenders(){for(String role:List.of("SELLER","MARKETPLACE","LENDER_OFFICER")){assertThrows(Exception.class,()->service.list(jwt(role)));assertThrows(Exception.class,()->service.create(input(),UUID.randomUUID().toString(),jwt(role)));}verifyNoInteractions(db,users,encoder);}
- @Test void duplicateCodeDoesNotCreateAnAccount(){when(db.queryForObject(contains("COUNT(*) FROM CF_LENDER_REGISTRY"),eq(Integer.class),eq("test-bank"))).thenReturn(1);assertEquals(409,assertThrows(org.springframework.web.server.ResponseStatusException.class,()->service.create(input(),UUID.randomUUID().toString(),jwt("ADMIN"))).getStatusCode().value());verify(users,never()).saveAndFlush(any());verify(db,never()).update(anyString(),any(Object[].class));}
- @Test void createsLinkedOfficerWithHashAndInactiveProductAtLastPosition(){when(db.queryForObject(contains("COUNT(*) FROM CF_LENDER_REGISTRY"),eq(Integer.class),eq("test-bank"))).thenReturn(0);when(encoder.encode(anyString())).thenReturn("bcrypt-hash");when(db.queryForObject(contains("MAX(R.ROUTING_PRIORITY)"),eq(Integer.class))).thenReturn(4);service.create(input(),UUID.randomUUID().toString(),jwt("ADMIN"));var account=org.mockito.ArgumentCaptor.forClass(com.credflow.auth.entity.AuthUser.class);verify(users).saveAndFlush(account.capture());assertEquals("LENDER_OFFICER",account.getValue().getUserRole());assertEquals("bcrypt-hash",account.getValue().getPasswordHash());assertNotNull(account.getValue().getLenderId());verify(db).update(contains("'BANK_A'"),any(),eq("test-bank"),eq("BANK"),eq("admin"),eq("Onboard lender"));verify(db).update(contains("?,0,'GOOD'"),any(),eq(account.getValue().getLenderId()),any(),eq(4));}
+	final JdbcTemplate db = mock(JdbcTemplate.class);
+	final AuthUserRepository users = mock(AuthUserRepository.class);
+	final PasswordEncoder encoder = mock(PasswordEncoder.class);
+	final LenderManagement service = new LenderManagement(db, users, encoder);
+
+	Jwt jwt(String role) {
+		return Jwt.withTokenValue("unit").header("alg", "RS256").subject("admin").claim("roles", List.of(role)).build();
+	}
+
+	LenderInput input() {
+		return new LenderInput("Test Bank", "test-bank", "BANK", "test.officer", "officer@example.test",
+				"ChosenPassword123", "Onboard lender");
+	}
+
+	@Test
+	void onlyAdminCanCreateLenders() {
+		for (String role : List.of("SELLER", "MARKETPLACE", "LENDER_OFFICER")) {
+			assertThrows(Exception.class, () -> service.list(jwt(role)));
+			assertThrows(Exception.class, () -> service.create(input(), UUID.randomUUID().toString(), jwt(role)));
+		}
+		verifyNoInteractions(db, users, encoder);
+	}
+
+	@Test
+	void duplicateCodeDoesNotCreateAnAccount() {
+		when(db.queryForObject(contains("COUNT(*) FROM CF_LENDER_REGISTRY"), eq(Integer.class), eq("test-bank")))
+				.thenReturn(1);
+		assertEquals(409,
+				assertThrows(org.springframework.web.server.ResponseStatusException.class,
+						() -> service.create(input(), UUID.randomUUID().toString(), jwt("ADMIN"))).getStatusCode()
+						.value());
+		verify(users, never()).saveAndFlush(any());
+		verify(db, never()).update(anyString(), any(Object[].class));
+	}
+
+	@Test
+	void createsLinkedOfficerWithHashAndInactiveProductAtLastPosition() {
+		when(db.queryForObject(contains("COUNT(*) FROM CF_LENDER_REGISTRY"), eq(Integer.class), eq("test-bank")))
+				.thenReturn(0);
+		when(encoder.encode(anyString())).thenReturn("bcrypt-hash");
+		when(db.queryForObject(contains("MAX(R.ROUTING_PRIORITY)"), eq(Integer.class))).thenReturn(4);
+		service.create(input(), UUID.randomUUID().toString(), jwt("ADMIN"));
+		var account = org.mockito.ArgumentCaptor.forClass(com.credflow.auth.entity.AuthUser.class);
+		verify(users).saveAndFlush(account.capture());
+		assertEquals("LENDER_OFFICER", account.getValue().getUserRole());
+		assertEquals("bcrypt-hash", account.getValue().getPasswordHash());
+		assertNotNull(account.getValue().getLenderId());
+		verify(db).update(contains("'BANK_A'"), any(), eq("test-bank"), eq("BANK"), eq("admin"), eq("Onboard lender"));
+		verify(db).update(contains("?,0,'GOOD'"), any(), eq(account.getValue().getLenderId()), any(), eq(4));
+	}
 }

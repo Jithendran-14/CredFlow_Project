@@ -6,8 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.credflow.auth.entity.AuthServiceClient;
 
-public interface AuthServiceClientRepository
-        extends JpaRepository<AuthServiceClient, Long> {
+public interface AuthServiceClientRepository extends JpaRepository<AuthServiceClient, Long> {
 
-    Optional<AuthServiceClient> findByClientId(String clientId);
+	Optional<AuthServiceClient> findByClientId(String clientId);
 }

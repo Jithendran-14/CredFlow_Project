@@ -4,6 +4,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.credflow.consent.entity.ConsentDeliveryEntity;
 
-public interface ConsentDeliveryRepository
-        extends JpaRepository<ConsentDeliveryEntity, String> {
+public interface ConsentDeliveryRepository extends JpaRepository<ConsentDeliveryEntity, String> {
 }

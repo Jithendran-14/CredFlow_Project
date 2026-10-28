@@ -10,14 +10,14 @@ import org.springframework.stereotype.Component;
 @Component
 public class BankCCallbackScheduler {
 
-    private final BankCSimulatorService service;
+	private final BankCSimulatorService service;
 
-    public BankCCallbackScheduler(BankCSimulatorService service) {
-        this.service = service;
-    }
+	public BankCCallbackScheduler(BankCSimulatorService service) {
+		this.service = service;
+	}
 
-    @Scheduled(fixedDelayString = "${credflow.simulator.callback-poll-ms:1000}")
-    public void tick() {
-        service.callbacks();
-    }
+	@Scheduled(fixedDelayString = "${credflow.simulator.callback-poll-ms:1000}")
+	public void tick() {
+		service.callbacks();
+	}
 }

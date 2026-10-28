@@ -1,6 +1,53 @@
 package com.credflow.service;
-import com.credflow.controller.ApplicationAmountsController;import com.credflow.entity.*;import com.credflow.platform.Platform;import jakarta.persistence.*;import org.junit.jupiter.api.Test;import java.util.*;import java.math.BigDecimal;import static org.junit.jupiter.api.Assertions.*;import static org.mockito.Mockito.*;import static org.mockito.ArgumentMatchers.*;
+
+import com.credflow.controller.ApplicationAmountsController;
+import com.credflow.entity.*;
+import com.credflow.platform.Platform;
+import jakarta.persistence.*;
+import org.junit.jupiter.api.Test;
+import java.util.*;
+import java.math.BigDecimal;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.*;
+
 class ApplicationAmountsTest {
- @Test void requestedAndOfferedRemainSeparateAndMissingOfferIsNull(){var em=mock(EntityManager.class);var p=mock(Platform.class);var w=new WorkflowRow();w.setId(UUID.randomUUID());w.setAmount(new BigDecimal("200000.00"));var wq=mock(TypedQuery.class);var oq=mock(TypedQuery.class);when(em.createQuery(contains("CfWorkflow"),eq(WorkflowRow.class))).thenReturn(wq);when(em.createQuery(contains("CfOffer"),eq(OfferRow.class))).thenReturn(oq);when(wq.setParameter(eq("ids"),any())).thenReturn(wq);when(oq.setParameter(eq("ids"),any())).thenReturn(oq);when(wq.getResultList()).thenReturn(List.of(w));when(oq.getResultList()).thenReturn(List.of());var service=new ApplicationAmountsController(em,p);var noOffer=(Map<String,Object>)service.amounts(List.of(w.getId()),null);var row=((List<Map<String,Object>>)noOffer.get("items")).getFirst();assertEquals("200000.00",row.get("requestedAmount"));assertNull(row.get("offeredAmount"));var offer=new OfferRow();offer.setApplicationId(w.getId());offer.setAmount(new BigDecimal("150000.00"));offer.setStatus("ACTIVE");when(oq.getResultList()).thenReturn(List.of(offer));row=((List<Map<String,Object>>)((Map<String,Object>)service.amounts(List.of(w.getId()),null)).get("items")).getFirst();assertEquals("150000.00",row.get("offeredAmount"));assertEquals("200000.00",row.get("requestedAmount"));verify(p,times(2)).owner(null,null,null,null,null,true);}
- @Test void limitsBatchSize(){assertThrows(Exception.class,()->new ApplicationAmountsController(mock(EntityManager.class),mock(Platform.class)).amounts(Collections.nCopies(101,UUID.randomUUID()),null));}
+	@Test
+	void requestedAndOfferedRemainSeparateAndMissingOfferIsNull() {
+		var em = mock(EntityManager.class);
+		var p = mock(Platform.class);
+		var w = new WorkflowRow();
+		w.setId(UUID.randomUUID());
+		w.setAmount(new BigDecimal("200000.00"));
+		var wq = mock(TypedQuery.class);
+		var oq = mock(TypedQuery.class);
+		when(em.createQuery(contains("CfWorkflow"), eq(WorkflowRow.class))).thenReturn(wq);
+		when(em.createQuery(contains("CfOffer"), eq(OfferRow.class))).thenReturn(oq);
+		when(wq.setParameter(eq("ids"), any())).thenReturn(wq);
+		when(oq.setParameter(eq("ids"), any())).thenReturn(oq);
+		when(wq.getResultList()).thenReturn(List.of(w));
+		when(oq.getResultList()).thenReturn(List.of());
+		var service = new ApplicationAmountsController(em, p);
+		var noOffer = (Map<String, Object>) service.amounts(List.of(w.getId()), null);
+		var row = ((List<Map<String, Object>>) noOffer.get("items")).getFirst();
+		assertEquals("200000.00", row.get("requestedAmount"));
+		assertNull(row.get("offeredAmount"));
+		var offer = new OfferRow();
+		offer.setApplicationId(w.getId());
+		offer.setAmount(new BigDecimal("150000.00"));
+		offer.setStatus("ACTIVE");
+		when(oq.getResultList()).thenReturn(List.of(offer));
+		row = ((List<Map<String, Object>>) ((Map<String, Object>) service.amounts(List.of(w.getId()), null))
+				.get("items")).getFirst();
+		assertEquals("150000.00", row.get("offeredAmount"));
+		assertEquals("200000.00", row.get("requestedAmount"));
+		verify(p, times(2)).owner(null, null, null, null, null, true);
+	}
+
+	@Test
+	void limitsBatchSize() {
+		assertThrows(Exception.class,
+				() -> new ApplicationAmountsController(mock(EntityManager.class), mock(Platform.class))
+						.amounts(Collections.nCopies(101, UUID.randomUUID()), null));
+	}
 }

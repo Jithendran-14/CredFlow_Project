@@ -10,14 +10,14 @@ import org.springframework.stereotype.Component;
 @Component
 public class IntegrationTaskScheduler {
 
-    private final LenderIntegrationService service;
+	private final LenderIntegrationService service;
 
-    public IntegrationTaskScheduler(LenderIntegrationService service) {
-        this.service = service;
-    }
+	public IntegrationTaskScheduler(LenderIntegrationService service) {
+		this.service = service;
+	}
 
-    @Scheduled(fixedDelayString = "${credflow.integration.poll-ms:1000}")
-    public void tick() {
-        service.work();
-    }
+	@Scheduled(fixedDelayString = "${credflow.integration.poll-ms:1000}")
+	public void tick() {
+		service.work();
+	}
 }

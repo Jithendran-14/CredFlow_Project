@@ -18,53 +18,33 @@ import com.credflow.auth.service.OAuthTokenService;
 @RestController
 public class OAuthTokenController {
 
-    private final OAuthTokenService tokenService;
+	private final OAuthTokenService tokenService;
 
-    public OAuthTokenController(OAuthTokenService tokenService) {
-        this.tokenService = tokenService;
-    }
+	public OAuthTokenController(OAuthTokenService tokenService) {
+		this.tokenService = tokenService;
+	}
 
-    @PostMapping(
-            value = "/oauth2/token",
-            consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
-            produces = MediaType.APPLICATION_JSON_VALUE
-    )
-    public ResponseEntity<?> token(
-            @RequestHeader(
-                    value = HttpHeaders.AUTHORIZATION,
-                    required = false
-            ) String authorization,
-            @RequestBody(required = false)
-            MultiValueMap<String, String> form) {
+	@PostMapping(value = "/oauth2/token", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<?> token(
+			@RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
+			@RequestBody(required = false) MultiValueMap<String, String> form) {
 
-        try {
-            var response = tokenService.issueToken(
-                    authorization,
-                    form
-            );
+		try {
+			var response = tokenService.issueToken(authorization, form);
 
-            return ResponseEntity.ok()
-                    .header(HttpHeaders.CACHE_CONTROL, "no-store")
-                    .header(HttpHeaders.PRAGMA, "no-cache")
-                    .body(response);
+			return ResponseEntity.ok().header(HttpHeaders.CACHE_CONTROL, "no-store")
+					.header(HttpHeaders.PRAGMA, "no-cache").body(response);
 
-        } catch (OAuthTokenException exception) {
+		} catch (OAuthTokenException exception) {
 
-            var response = ResponseEntity
-                    .status(exception.getStatus())
-                    .header(HttpHeaders.CACHE_CONTROL, "no-store")
-                    .header(HttpHeaders.PRAGMA, "no-cache");
+			var response = ResponseEntity.status(exception.getStatus()).header(HttpHeaders.CACHE_CONTROL, "no-store")
+					.header(HttpHeaders.PRAGMA, "no-cache");
 
-            if (exception.getStatus() == HttpStatus.UNAUTHORIZED) {
-                response.header(
-                        HttpHeaders.WWW_AUTHENTICATE,
-                        "Basic realm=\"credflow-token\""
-                );
-            }
+			if (exception.getStatus() == HttpStatus.UNAUTHORIZED) {
+				response.header(HttpHeaders.WWW_AUTHENTICATE, "Basic realm=\"credflow-token\"");
+			}
 
-            return response.body(
-                    Map.of("error", exception.getErrorCode())
-            );
-        }
-    }
+			return response.body(Map.of("error", exception.getErrorCode()));
+		}
+	}
 }

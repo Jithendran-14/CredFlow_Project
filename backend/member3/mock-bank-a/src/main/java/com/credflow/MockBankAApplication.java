@@ -10,7 +10,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EntityScan(basePackages = "com.credflow.entity")
 public class MockBankAApplication {
 
-    public static void main(String[] args) {
-        SpringApplication.run(MockBankAApplication.class, args);
-    }
+	public static void main(String[] args) {
+		SpringApplication.run(MockBankAApplication.class, args);
+	}
 }

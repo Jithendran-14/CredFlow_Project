@@ -22,38 +22,29 @@ import com.credflow.application.service.ApplicationService;
 @RequestMapping("/internal/v1/applications")
 public class InternalApplicationController {
 
-    private final ApplicationService applicationService;
+	private final ApplicationService applicationService;
 
-    public InternalApplicationController(
-            ApplicationService applicationService) {
-        this.applicationService = applicationService;
-    }
+	public InternalApplicationController(ApplicationService applicationService) {
+		this.applicationService = applicationService;
+	}
 
-    @GetMapping("/{applicationId}/context")
-    public ResponseEntity<ApplicationContextResponse> getApplicationContext(
-            @PathVariable("applicationId") String applicationId,
-            @AuthenticationPrincipal Jwt jwt) {
+	@GetMapping("/{applicationId}/context")
+	public ResponseEntity<ApplicationContextResponse> getApplicationContext(
+			@PathVariable("applicationId") String applicationId, @AuthenticationPrincipal Jwt jwt) {
 
-        ApplicationContextResponse response =
-                applicationService.getApplicationContext(
-                        applicationId, jwt);
+		ApplicationContextResponse response = applicationService.getApplicationContext(applicationId, jwt);
 
-        return ResponseEntity.ok(response);
-    }
-    
-    @PostMapping("/{applicationId}/ownership-check")
-    public ResponseEntity<OwnershipCheckResponse> checkApplicationOwnership(
-            @PathVariable("applicationId") String applicationId,
-            @Valid @RequestBody OwnershipCheckRequest request,
-            @AuthenticationPrincipal Jwt jwt) {
+		return ResponseEntity.ok(response);
+	}
 
-        OwnershipCheckResponse response =
-                applicationService.checkApplicationOwnership(
-                        applicationId,
-                        request.sellerId(),
-                        jwt
-                );
+	@PostMapping("/{applicationId}/ownership-check")
+	public ResponseEntity<OwnershipCheckResponse> checkApplicationOwnership(
+			@PathVariable("applicationId") String applicationId, @Valid @RequestBody OwnershipCheckRequest request,
+			@AuthenticationPrincipal Jwt jwt) {
 
-        return ResponseEntity.ok(response);
-    }
+		OwnershipCheckResponse response = applicationService.checkApplicationOwnership(applicationId,
+				request.sellerId(), jwt);
+
+		return ResponseEntity.ok(response);
+	}
 }

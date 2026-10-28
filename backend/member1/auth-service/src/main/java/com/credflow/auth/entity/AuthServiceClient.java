@@ -9,34 +9,29 @@ import jakarta.persistence.Table;
 @Table(name = "CF_AUTH_SERVICE_CLIENTS")
 public class AuthServiceClient {
 
-    @Id
-    @Column(name = "USER_ID", nullable = false)
-    private Long userId;
+	@Id
+	@Column(name = "USER_ID", nullable = false)
+	private Long userId;
 
-    @Column(
-            name = "CLIENT_ID",
-            nullable = false,
-            unique = true,
-            length = 100
-    )
-    private String clientId;
+	@Column(name = "CLIENT_ID", nullable = false, unique = true, length = 100)
+	private String clientId;
 
-    @Column(name = "SCOPES", nullable = false, length = 1000)
-    private String scopes;
+	@Column(name = "SCOPES", nullable = false, length = 1000)
+	private String scopes;
 
-    protected AuthServiceClient() {
-        // Required by JPA.
-    }
+	protected AuthServiceClient() {
+		// Required by JPA.
+	}
 
-    public Long getUserId() {
-        return userId;
-    }
+	public Long getUserId() {
+		return userId;
+	}
 
-    public String getClientId() {
-        return clientId;
-    }
+	public String getClientId() {
+		return clientId;
+	}
 
-    public String getScopes() {
-        return scopes;
-    }
+	public String getScopes() {
+		return scopes;
+	}
 }

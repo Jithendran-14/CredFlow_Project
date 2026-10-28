@@ -13,37 +13,26 @@ import org.junit.jupiter.api.Test;
 
 class OracleConnectionDiagnosticTest {
 
-    @Test
-    void shouldConnectToOracleTestSchema() throws Exception {
+	@Test
+	void shouldConnectToOracleTestSchema() throws Exception {
 
-        String password =
-                System.getenv("CREDFLOW_TEST_DB_PASSWORD");
+		String password = System.getenv("CREDFLOW_TEST_DB_PASSWORD");
 
-        assertNotNull(
-                password,
-                "CREDFLOW_TEST_DB_PASSWORD is not available to JUnit");
+		assertNotNull(password, "CREDFLOW_TEST_DB_PASSWORD is not available to JUnit");
 
-        String url =
-                "jdbc:oracle:thin:@//localhost:1521/FREEPDB1";
+		String url = "jdbc:oracle:thin:@//localhost:1521/FREEPDB1";
 
-        try (Connection connection = DriverManager.getConnection(
-                url,
-                "CF_APPLICATION_TEST",
-                password);
+		try (Connection connection = DriverManager.getConnection(url, "CF_APPLICATION_TEST", password);
 
-             Statement statement = connection.createStatement();
+				Statement statement = connection.createStatement();
 
-             ResultSet resultSet = statement.executeQuery(
-                     "SELECT USER FROM DUAL")) {
+				ResultSet resultSet = statement.executeQuery("SELECT USER FROM DUAL")) {
 
-            resultSet.next();
+			resultSet.next();
 
-            String connectedUser = resultSet.getString(1);
+			String connectedUser = resultSet.getString(1);
 
-            assertEquals(
-                    "CF_APPLICATION_TEST",
-                    connectedUser,
-                    "Connected to the wrong Oracle schema");
-        }
-    }
+			assertEquals("CF_APPLICATION_TEST", connectedUser, "Connected to the wrong Oracle schema");
+		}
+	}
 }

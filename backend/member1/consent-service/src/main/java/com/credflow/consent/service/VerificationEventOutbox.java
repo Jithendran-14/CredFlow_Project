@@ -17,101 +17,72 @@ import com.credflow.consent.service.VerificationResultEventBuilder.ResultData;
 @Component
 public class VerificationEventOutbox {
 
-    private final JdbcTemplate jdbc;
-    private final VerificationResultEventBuilder builder;
+	private final JdbcTemplate jdbc;
+	private final VerificationResultEventBuilder builder;
 
-    public VerificationEventOutbox(
-            JdbcTemplate jdbc,
-            VerificationResultEventBuilder builder) {
+	public VerificationEventOutbox(JdbcTemplate jdbc, VerificationResultEventBuilder builder) {
 
-        this.jdbc = jdbc;
-        this.builder = builder;
-    }
+		this.jdbc = jdbc;
+		this.builder = builder;
+	}
 
-    @Transactional(propagation = Propagation.MANDATORY)
-    public void append(
-            VerificationRequest request,
-            ResultData result) {
+	@Transactional(propagation = Propagation.MANDATORY)
+	public void append(VerificationRequest request, ResultData result) {
 
-        String applicationId = request.applicationId().toString();
+		String applicationId = request.applicationId().toString();
 
-        jdbc.update("""
-                MERGE INTO CF_CONSENT_EVENT_COUNTERS target
-                USING (
-                    SELECT ? AS APPLICATION_ID FROM DUAL
-                ) source
-                ON (
-                    target.APPLICATION_ID = source.APPLICATION_ID
-                )
-                WHEN NOT MATCHED THEN
-                    INSERT (APPLICATION_ID, LAST_EVENT_VERSION)
-                    VALUES (source.APPLICATION_ID, 0)
-                """,
-                applicationId
-        );
+		jdbc.update("""
+				MERGE INTO CF_CONSENT_EVENT_COUNTERS target
+				USING (
+				    SELECT ? AS APPLICATION_ID FROM DUAL
+				) source
+				ON (
+				    target.APPLICATION_ID = source.APPLICATION_ID
+				)
+				WHEN NOT MATCHED THEN
+				    INSERT (APPLICATION_ID, LAST_EVENT_VERSION)
+				    VALUES (source.APPLICATION_ID, 0)
+				""", applicationId);
 
-        Long previous = jdbc.queryForObject("""
-                SELECT LAST_EVENT_VERSION
-                FROM CF_CONSENT_EVENT_COUNTERS
-                WHERE APPLICATION_ID = ?
-                FOR UPDATE
-                """,
-                Long.class,
-                applicationId
-        );
+		Long previous = jdbc.queryForObject("""
+				SELECT LAST_EVENT_VERSION
+				FROM CF_CONSENT_EVENT_COUNTERS
+				WHERE APPLICATION_ID = ?
+				FOR UPDATE
+				""", Long.class, applicationId);
 
-        if (previous == null) {
-            throw new IllegalStateException(
-                    "CONSENT_EVENT_COUNTER_MISSING"
-            );
-        }
+		if (previous == null) {
+			throw new IllegalStateException("CONSENT_EVENT_COUNTER_MISSING");
+		}
 
-        long next = Math.addExact(previous, 1L);
+		long next = Math.addExact(previous, 1L);
 
-        jdbc.update("""
-                UPDATE CF_CONSENT_EVENT_COUNTERS
-                SET LAST_EVENT_VERSION = ?
-                WHERE APPLICATION_ID = ?
-                """,
-                next,
-                applicationId
-        );
+		jdbc.update("""
+				UPDATE CF_CONSENT_EVENT_COUNTERS
+				SET LAST_EVENT_VERSION = ?
+				WHERE APPLICATION_ID = ?
+				""", next, applicationId);
 
-        UUID eventId = UUID.randomUUID();
+		UUID eventId = UUID.randomUUID();
 
-        String json = builder.build(
-                request,
-                result,
-                eventId,
-                next,
-                OffsetDateTime.now(ZoneOffset.UTC)
-        );
+		String json = builder.build(request, result, eventId, next, OffsetDateTime.now(ZoneOffset.UTC));
 
-        jdbc.update("""
-                INSERT INTO CF_OUTBOX_EVENTS (
-                    EVENT_ID,
-                    VERIFICATION_ID,
-                    APPLICATION_ID,
-                    AGGREGATE_VERSION,
-                    EVENT_TYPE,
-                    SCHEMA_VERSION,
-                    CORRELATION_ID,
-                    CAUSATION_ID,
-                    EVENT_PAYLOAD
-                )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                eventId.toString(),
-                request.verificationId().toString(),
-                applicationId,
-                next,
-                "verification.completed",
-                "1.0",
-                request.correlationId(),
-                request.causationId() == null
-                        ? null
-                        : request.causationId().toString(),
-                new SqlParameterValue(Types.CLOB, json)
-        );
-    }
+		jdbc.update("""
+				INSERT INTO CF_OUTBOX_EVENTS (
+				    EVENT_ID,
+				    VERIFICATION_ID,
+				    APPLICATION_ID,
+				    AGGREGATE_VERSION,
+				    EVENT_TYPE,
+				    SCHEMA_VERSION,
+				    CORRELATION_ID,
+				    CAUSATION_ID,
+				    EVENT_PAYLOAD
+				)
+				VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+				""", eventId.toString(), request.verificationId().toString(), applicationId, next,
+				"verification.completed", "1.0", request.correlationId(),
+				request.causationId() == null ? null : request.causationId().toString(),
+				new SqlParameterValue(Types.CLOB, json));
+	}
 }

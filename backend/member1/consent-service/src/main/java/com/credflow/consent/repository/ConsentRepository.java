@@ -11,18 +11,15 @@ import com.credflow.consent.entity.ConsentEntity;
 
 import jakarta.persistence.LockModeType;
 
-public interface ConsentRepository
-        extends JpaRepository<ConsentEntity, String> {
+public interface ConsentRepository extends JpaRepository<ConsentEntity, String> {
 
-    Optional<ConsentEntity> findByApplicationId(String applicationId);
+	Optional<ConsentEntity> findByApplicationId(String applicationId);
 
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("""
-            select consent
-            from ConsentEntity consent
-            where consent.applicationId = :applicationId
-            """)
-    Optional<ConsentEntity> findForUpdateByApplicationId(
-            @Param("applicationId") String applicationId
-    );
+	@Lock(LockModeType.PESSIMISTIC_WRITE)
+	@Query("""
+			select consent
+			from ConsentEntity consent
+			where consent.applicationId = :applicationId
+			""")
+	Optional<ConsentEntity> findForUpdateByApplicationId(@Param("applicationId") String applicationId);
 }

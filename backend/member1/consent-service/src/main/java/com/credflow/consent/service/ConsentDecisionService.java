@@ -29,232 +29,175 @@ import tools.jackson.databind.ObjectMapper;
 @Service
 public class ConsentDecisionService {
 
-    private final ApplicationOwnershipClient applications;
-    private final ConsentTransactionService transactions;
-    private final ObjectMapper objectMapper;
-    private final String noticeVersion;
-    private final Set<UUID> allowedLenderIds;
+	private final ApplicationOwnershipClient applications;
+	private final ConsentTransactionService transactions;
+	private final ObjectMapper objectMapper;
+	private final String noticeVersion;
+	private final Set<UUID> allowedLenderIds;
 
-    @org.springframework.beans.factory.annotation.Autowired(required=false)
-    private org.springframework.jdbc.core.JdbcTemplate lenderRegistry;
-    private boolean validRecipientLenders(Set<UUID> ids){
-        for(UUID id:ids)if(!allowedLenderIds.contains(id)){
-            if(lenderRegistry==null||lenderRegistry.queryForList("SELECT LENDER_ID FROM CF_AUTH.CF_LENDER_REGISTRY WHERE LENDER_ID=?",String.class,id.toString()).isEmpty())return false;
-        }
-        return true;
-    }
-    public ConsentDecisionService(
-            ApplicationOwnershipClient applications,
-            ConsentTransactionService transactions,
-            ObjectMapper objectMapper,
-            @Value("${credflow.consent.notice-version}") String noticeVersion,
-            @Value("${credflow.consent.allowed-lender-ids[0]}") UUID bankA,
-            @Value("${credflow.consent.allowed-lender-ids[1]}") UUID nbfcB,
-            @Value("${credflow.consent.allowed-lender-ids[2]:bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb3}") UUID bankC) {
+	@org.springframework.beans.factory.annotation.Autowired(required = false)
+	private org.springframework.jdbc.core.JdbcTemplate lenderRegistry;
 
-        this.applications = applications;
-        this.transactions = transactions;
-        this.objectMapper = objectMapper;
-        this.noticeVersion = noticeVersion;
-        this.allowedLenderIds = Set.of(bankA, nbfcB, bankC);
-    }
+	private boolean validRecipientLenders(Set<UUID> ids) {
+		for (UUID id : ids)
+			if (!allowedLenderIds.contains(id)) {
+				if (lenderRegistry == null || lenderRegistry
+						.queryForList("SELECT LENDER_ID FROM CF_AUTH.CF_LENDER_REGISTRY WHERE LENDER_ID=?",
+								String.class, id.toString())
+						.isEmpty())
+					return false;
+			}
+		return true;
+	}
 
-    public ConsentDecisionResponse record(
-            UUID applicationId,
-            ConsentDecisionRequest request,
-            String idempotencyKey,
-            String correlationHeader,
-            Jwt jwt) {
+	public ConsentDecisionService(ApplicationOwnershipClient applications, ConsentTransactionService transactions,
+			ObjectMapper objectMapper, @Value("${credflow.consent.notice-version}") String noticeVersion,
+			@Value("${credflow.consent.allowed-lender-ids[0]}") UUID bankA,
+			@Value("${credflow.consent.allowed-lender-ids[1]}") UUID nbfcB,
+			@Value("${credflow.consent.allowed-lender-ids[2]:bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb3}") UUID bankC) {
 
-        if (jwt == null
-                || jwt.getSubject() == null
-                || jwt.getSubject().isBlank()) {
-            throw new AccessDeniedException(
-                    "Authenticated seller is required");
-        }
+		this.applications = applications;
+		this.transactions = transactions;
+		this.objectMapper = objectMapper;
+		this.noticeVersion = noticeVersion;
+		this.allowedLenderIds = Set.of(bankA, nbfcB, bankC);
+	}
 
-        String sellerId = jwt.getClaimAsString("sellerId");
+	public ConsentDecisionResponse record(UUID applicationId, ConsentDecisionRequest request, String idempotencyKey,
+			String correlationHeader, Jwt jwt) {
 
-        applications.requireOwnership(applicationId, sellerId);
+		if (jwt == null || jwt.getSubject() == null || jwt.getSubject().isBlank()) {
+			throw new AccessDeniedException("Authenticated seller is required");
+		}
 
-        var context = applications.getContext(applicationId);
+		String sellerId = jwt.getClaimAsString("sellerId");
 
-        if (!sellerId.equals(context.sellerId())) {
-            throw new AccessDeniedException(
-                    "Application seller identity has changed");
-        }
+		applications.requireOwnership(applicationId, sellerId);
 
-        UUID operationId = parseOperationId(idempotencyKey);
-        String correlationId = resolveCorrelation(correlationHeader);
+		var context = applications.getContext(applicationId);
 
-        validateDecision(request, context.marketplaceId());
+		if (!sellerId.equals(context.sellerId())) {
+			throw new AccessDeniedException("Application seller identity has changed");
+		}
 
-        String hash = fingerprint(
-                applicationId,
-                sellerId,
-                jwt.getSubject(),
-                request
-        );
+		UUID operationId = parseOperationId(idempotencyKey);
+		String correlationId = resolveCorrelation(correlationHeader);
 
-        try {
-            return transactions.recordInitialDecision(
-                    applicationId,
-                    sellerId,
-                    jwt.getSubject(),
-                    operationId,
-                    correlationId,
-                    hash,
-                    request
-            );
+		validateDecision(request, context.marketplaceId());
 
-        } catch (DataIntegrityViolationException failure) {
-            return transactions.resolveInsertConflict(
-                    applicationId,
-                    operationId,
-                    hash,
-                    failure
-            );
-        }
-    }
+		String hash = fingerprint(applicationId, sellerId, jwt.getSubject(), request);
 
-    private void validateDecision(
-            ConsentDecisionRequest request,
-            UUID marketplaceId) {
+		try {
+			return transactions.recordInitialDecision(applicationId, sellerId, jwt.getSubject(), operationId,
+					correlationId, hash, request);
 
-        if (!noticeVersion.equals(request.noticeVersion())) {
-            throw badRequest("UNSUPPORTED_NOTICE_VERSION");
-        }
+		} catch (DataIntegrityViolationException failure) {
+			return transactions.resolveInsertConflict(applicationId, operationId, hash, failure);
+		}
+	}
 
-        if (request.decision() == Decision.DECLINED) {
+	private void validateDecision(ConsentDecisionRequest request, UUID marketplaceId) {
 
-            if (!request.scopes().isEmpty()
-                    || !request.sourceMarketplaceIds().isEmpty()
-                    || !request.recipientLenderIds().isEmpty()) {
-                throw badRequest("DECLINED_CONSENT_MUST_NOT_GRANT_ACCESS");
-            }
+		if (!noticeVersion.equals(request.noticeVersion())) {
+			throw badRequest("UNSUPPORTED_NOTICE_VERSION");
+		}
 
-            return;
-        }
+		if (request.decision() == Decision.DECLINED) {
 
-        if (request.scopes().isEmpty()) {
-            throw badRequest("CONSENT_SCOPES_REQUIRED");
-        }
+			if (!request.scopes().isEmpty() || !request.sourceMarketplaceIds().isEmpty()
+					|| !request.recipientLenderIds().isEmpty()) {
+				throw badRequest("DECLINED_CONSENT_MUST_NOT_GRANT_ACCESS");
+			}
 
-        boolean dataRead =
-                request.scopes().contains(Scope.MARKETPLACE_DATA_READ);
+			return;
+		}
 
-        if (dataRead) {
-            if (!request.sourceMarketplaceIds().equals(
-                    Set.of(marketplaceId))) {
-                throw badRequest("INVALID_SOURCE_MARKETPLACE");
-            }
-        } else if (!request.sourceMarketplaceIds().isEmpty()) {
-            throw badRequest("MARKETPLACE_SCOPE_REQUIRED");
-        }
+		if (request.scopes().isEmpty()) {
+			throw badRequest("CONSENT_SCOPES_REQUIRED");
+		}
 
-        boolean lenderSharing =
-                request.scopes().contains(Scope.LENDER_APPLICATION_SHARE);
+		boolean dataRead = request.scopes().contains(Scope.MARKETPLACE_DATA_READ);
 
-        if (lenderSharing) {
-            if (request.recipientLenderIds().isEmpty()
-                    || !validRecipientLenders(
-                            request.recipientLenderIds())) {
-                throw badRequest("INVALID_RECIPIENT_LENDERS");
-            }
-        } else if (!request.recipientLenderIds().isEmpty()) {
-            throw badRequest("LENDER_SHARING_SCOPE_REQUIRED");
-        }
-    }
+		if (dataRead) {
+			if (!request.sourceMarketplaceIds().equals(Set.of(marketplaceId))) {
+				throw badRequest("INVALID_SOURCE_MARKETPLACE");
+			}
+		} else if (!request.sourceMarketplaceIds().isEmpty()) {
+			throw badRequest("MARKETPLACE_SCOPE_REQUIRED");
+		}
 
-    private UUID parseOperationId(String value) {
+		boolean lenderSharing = request.scopes().contains(Scope.LENDER_APPLICATION_SHARE);
 
-        if (value == null || value.isBlank()) {
-            throw badRequest("IDEMPOTENCY_KEY_REQUIRED");
-        }
+		if (lenderSharing) {
+			if (request.recipientLenderIds().isEmpty() || !validRecipientLenders(request.recipientLenderIds())) {
+				throw badRequest("INVALID_RECIPIENT_LENDERS");
+			}
+		} else if (!request.recipientLenderIds().isEmpty()) {
+			throw badRequest("LENDER_SHARING_SCOPE_REQUIRED");
+		}
+	}
 
-        try {
-            return UUID.fromString(value);
-        } catch (IllegalArgumentException exception) {
-            throw badRequest("IDEMPOTENCY_KEY_MUST_BE_UUID");
-        }
-    }
+	private UUID parseOperationId(String value) {
 
-    private String resolveCorrelation(String value) {
+		if (value == null || value.isBlank()) {
+			throw badRequest("IDEMPOTENCY_KEY_REQUIRED");
+		}
 
-        if (value == null) {
-            return UUID.randomUUID().toString();
-        }
+		try {
+			return UUID.fromString(value);
+		} catch (IllegalArgumentException exception) {
+			throw badRequest("IDEMPOTENCY_KEY_MUST_BE_UUID");
+		}
+	}
 
-        if (!value.matches("[A-Za-z0-9._:-]{1,100}")) {
-            throw badRequest("INVALID_CORRELATION_ID");
-        }
+	private String resolveCorrelation(String value) {
 
-        return value;
-    }
+		if (value == null) {
+			return UUID.randomUUID().toString();
+		}
 
-    private String fingerprint(
-            UUID applicationId,
-            String sellerId,
-            String actorSubject,
-            ConsentDecisionRequest request) {
+		if (!value.matches("[A-Za-z0-9._:-]{1,100}")) {
+			throw badRequest("INVALID_CORRELATION_ID");
+		}
 
-        Map<String, Object> business = new TreeMap<>();
+		return value;
+	}
 
-        business.put("applicationId", applicationId.toString());
-        business.put("sellerId", sellerId);
-        business.put("actorSubject", actorSubject);
-        business.put("decision", request.decision().name());
-        business.put(
-                "expectedConsentVersion",
-                request.expectedConsentVersion()
-        );
-        business.put("noticeVersion", request.noticeVersion());
+	private String fingerprint(UUID applicationId, String sellerId, String actorSubject,
+			ConsentDecisionRequest request) {
 
-        business.put(
-                "scopes",
-                request.scopes().stream()
-                        .map(Enum::name)
-                        .sorted()
-                        .toList()
-        );
+		Map<String, Object> business = new TreeMap<>();
 
-        business.put(
-                "sourceMarketplaceIds",
-                sortedIds(request.sourceMarketplaceIds())
-        );
+		business.put("applicationId", applicationId.toString());
+		business.put("sellerId", sellerId);
+		business.put("actorSubject", actorSubject);
+		business.put("decision", request.decision().name());
+		business.put("expectedConsentVersion", request.expectedConsentVersion());
+		business.put("noticeVersion", request.noticeVersion());
 
-        business.put(
-                "recipientLenderIds",
-                sortedIds(request.recipientLenderIds())
-        );
+		business.put("scopes", request.scopes().stream().map(Enum::name).sorted().toList());
 
-        String json = objectMapper.writeValueAsString(business);
+		business.put("sourceMarketplaceIds", sortedIds(request.sourceMarketplaceIds()));
 
-        try {
-            byte[] digest = MessageDigest.getInstance("SHA-256")
-                    .digest(json.getBytes(StandardCharsets.UTF_8));
+		business.put("recipientLenderIds", sortedIds(request.recipientLenderIds()));
 
-            return HexFormat.of().formatHex(digest);
+		String json = objectMapper.writeValueAsString(business);
 
-        } catch (NoSuchAlgorithmException exception) {
-            throw new IllegalStateException(
-                    "SHA-256 is unavailable",
-                    exception
-            );
-        }
-    }
+		try {
+			byte[] digest = MessageDigest.getInstance("SHA-256").digest(json.getBytes(StandardCharsets.UTF_8));
 
-    private List<String> sortedIds(Set<UUID> ids) {
-        return ids.stream()
-                .map(UUID::toString)
-                .sorted()
-                .toList();
-    }
+			return HexFormat.of().formatHex(digest);
 
-    private ResponseStatusException badRequest(String code) {
-        return new ResponseStatusException(
-                HttpStatus.BAD_REQUEST,
-                code
-        );
-    }
+		} catch (NoSuchAlgorithmException exception) {
+			throw new IllegalStateException("SHA-256 is unavailable", exception);
+		}
+	}
+
+	private List<String> sortedIds(Set<UUID> ids) {
+		return ids.stream().map(UUID::toString).sorted().toList();
+	}
+
+	private ResponseStatusException badRequest(String code) {
+		return new ResponseStatusException(HttpStatus.BAD_REQUEST, code);
+	}
 }

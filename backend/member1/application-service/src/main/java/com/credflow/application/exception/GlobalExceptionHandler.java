@@ -19,107 +19,74 @@ import jakarta.servlet.http.HttpServletRequest;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(ActiveApplicationException.class)
-    public ResponseEntity<ApiErrorResponse> active(ActiveApplicationException ex,HttpServletRequest request) {
-        return buildResponse(HttpStatus.CONFLICT,"ACTIVE_APPLICATION_EXISTS",ex.getMessage(),request,ex.applicationId()==null?List.of():List.of(new FieldError("existingApplicationId",ex.applicationId())));
-    }
-    @ExceptionHandler(ApplicationNotFoundException.class)
-    public ResponseEntity<ApiErrorResponse> handleNotFound(
-            ApplicationNotFoundException exception,
-            HttpServletRequest request) {
+	@ExceptionHandler(ActiveApplicationException.class)
+	public ResponseEntity<ApiErrorResponse> active(ActiveApplicationException ex, HttpServletRequest request) {
+		return buildResponse(HttpStatus.CONFLICT, "ACTIVE_APPLICATION_EXISTS", ex.getMessage(), request,
+				ex.applicationId() == null ? List.of()
+						: List.of(new FieldError("existingApplicationId", ex.applicationId())));
+	}
 
-        return buildResponse(
-                HttpStatus.NOT_FOUND,
-                "APPLICATION_NOT_FOUND",
-                exception.getMessage(),
-                request,
-                List.of());
-    }
+	@ExceptionHandler(ApplicationNotFoundException.class)
+	public ResponseEntity<ApiErrorResponse> handleNotFound(ApplicationNotFoundException exception,
+			HttpServletRequest request) {
 
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ApiErrorResponse> handleValidation(
-            MethodArgumentNotValidException exception,
-            HttpServletRequest request) {
+		return buildResponse(HttpStatus.NOT_FOUND, "APPLICATION_NOT_FOUND", exception.getMessage(), request, List.of());
+	}
 
-        List<FieldError> errors = exception.getBindingResult()
-                .getFieldErrors()
-                .stream()
-                .map(error -> new FieldError(
-                        error.getField(),
-                        error.getDefaultMessage() == null
-                                ? "Invalid value"
-                                : error.getDefaultMessage()))
-                .toList();
+	@ExceptionHandler(MethodArgumentNotValidException.class)
+	public ResponseEntity<ApiErrorResponse> handleValidation(MethodArgumentNotValidException exception,
+			HttpServletRequest request) {
 
-        return buildResponse(
-                HttpStatus.BAD_REQUEST,
-                "VALIDATION_ERROR",
-                "One or more request fields are invalid",
-                request,
-                errors);
-    }
+		List<FieldError> errors = exception.getBindingResult().getFieldErrors().stream()
+				.map(error -> new FieldError(error.getField(),
+						error.getDefaultMessage() == null ? "Invalid value" : error.getDefaultMessage()))
+				.toList();
 
-    @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<ApiErrorResponse> handleUnreadableRequest(
-            HttpMessageNotReadableException exception,
-            HttpServletRequest request) {
+		return buildResponse(HttpStatus.BAD_REQUEST, "VALIDATION_ERROR", "One or more request fields are invalid",
+				request, errors);
+	}
 
-        return buildResponse(
-                HttpStatus.BAD_REQUEST,
-                "INVALID_REQUEST_BODY",
-                "Request body is invalid or contains unsupported values",
-                request,
-                List.of());
-    }
+	@ExceptionHandler(HttpMessageNotReadableException.class)
+	public ResponseEntity<ApiErrorResponse> handleUnreadableRequest(HttpMessageNotReadableException exception,
+			HttpServletRequest request) {
 
-    @ExceptionHandler(IdempotencyConflictException.class)
-    public ResponseEntity<ApiErrorResponse> handleIdempotencyConflict(
-            IdempotencyConflictException exception,
-            HttpServletRequest request) {
+		return buildResponse(HttpStatus.BAD_REQUEST, "INVALID_REQUEST_BODY",
+				"Request body is invalid or contains unsupported values", request, List.of());
+	}
 
-        return buildResponse(
-                HttpStatus.CONFLICT,
-                "IDEMPOTENCY_KEY_CONFLICT",
-                exception.getMessage(),
-                request,
-                List.of());
-    }
+	@ExceptionHandler(IdempotencyConflictException.class)
+	public ResponseEntity<ApiErrorResponse> handleIdempotencyConflict(IdempotencyConflictException exception,
+			HttpServletRequest request) {
 
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<ApiErrorResponse> handleIllegalArgument(
-            IllegalArgumentException exception,
-            HttpServletRequest request) {
+		return buildResponse(HttpStatus.CONFLICT, "IDEMPOTENCY_KEY_CONFLICT", exception.getMessage(), request,
+				List.of());
+	}
 
-        return buildResponse(
-                HttpStatus.BAD_REQUEST,
-                "INVALID_REQUEST",
-                exception.getMessage(),
-                request,
-                List.of());
-    }
+	@ExceptionHandler(IllegalArgumentException.class)
+	public ResponseEntity<ApiErrorResponse> handleIllegalArgument(IllegalArgumentException exception,
+			HttpServletRequest request) {
 
-    @ExceptionHandler(org.springframework.web.server.ResponseStatusException.class)
-    public ResponseEntity<ApiErrorResponse> status(org.springframework.web.server.ResponseStatusException ex,HttpServletRequest request){return buildResponse(HttpStatus.valueOf(ex.getStatusCode().value()),"REQUEST_REJECTED",ex.getReason(),request,List.of());}
+		return buildResponse(HttpStatus.BAD_REQUEST, "INVALID_REQUEST", exception.getMessage(), request, List.of());
+	}
 
-    private ResponseEntity<ApiErrorResponse> buildResponse(
-            HttpStatus status,
-            String code,
-            String message,
-            HttpServletRequest request,
-            List<FieldError> fieldErrors) {
+	@ExceptionHandler(org.springframework.web.server.ResponseStatusException.class)
+	public ResponseEntity<ApiErrorResponse> status(org.springframework.web.server.ResponseStatusException ex,
+			HttpServletRequest request) {
+		return buildResponse(HttpStatus.valueOf(ex.getStatusCode().value()), "REQUEST_REJECTED", ex.getReason(),
+				request, List.of());
+	}
 
-        String correlationId = request.getHeader("X-Correlation-ID");
+	private ResponseEntity<ApiErrorResponse> buildResponse(HttpStatus status, String code, String message,
+			HttpServletRequest request, List<FieldError> fieldErrors) {
 
-        if (correlationId == null || correlationId.isBlank()) {
-            correlationId = UUID.randomUUID().toString();
-        }
+		String correlationId = request.getHeader("X-Correlation-ID");
 
-        ApiErrorResponse body = new ApiErrorResponse(
-                code,
-                message,
-                correlationId,
-                fieldErrors);
+		if (correlationId == null || correlationId.isBlank()) {
+			correlationId = UUID.randomUUID().toString();
+		}
 
-        return ResponseEntity.status(status).body(body);
-    }
+		ApiErrorResponse body = new ApiErrorResponse(code, message, correlationId, fieldErrors);
+
+		return ResponseEntity.status(status).body(body);
+	}
 }

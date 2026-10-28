@@ -18,36 +18,21 @@ import jakarta.validation.Valid;
 @RequestMapping("/internal/v1/applications")
 public class FinancialRetrievalController {
 
-    private final FinancialRetrievalService service;
+	private final FinancialRetrievalService service;
 
-    public FinancialRetrievalController(
-            FinancialRetrievalService service) {
+	public FinancialRetrievalController(FinancialRetrievalService service) {
 
-        this.service = service;
-    }
+		this.service = service;
+	}
 
-    @PostMapping("/{applicationId}/financial-data/retrievals")
-    public ResponseEntity<Response> retrieve(
-            @PathVariable("applicationId") UUID applicationId,
-            @Valid @RequestBody Request request,
-            @RequestHeader(
-                    value = "Idempotency-Key",
-                    required = false
-            ) String idempotencyKey,
-            @RequestHeader(
-                    value = "X-Correlation-ID",
-                    required = false
-            ) String correlationId,
-            @AuthenticationPrincipal Jwt jwt) {
+	@PostMapping("/{applicationId}/financial-data/retrievals")
+	public ResponseEntity<Response> retrieve(@PathVariable("applicationId") UUID applicationId,
+			@Valid @RequestBody Request request,
+			@RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey,
+			@RequestHeader(value = "X-Correlation-ID", required = false) String correlationId,
+			@AuthenticationPrincipal Jwt jwt) {
 
-        return ResponseEntity.ok()
-                .cacheControl(CacheControl.noStore())
-                .body(service.retrieve(
-                        applicationId,
-                        request,
-                        idempotencyKey,
-                        correlationId,
-                        jwt
-                ));
-    }
+		return ResponseEntity.ok().cacheControl(CacheControl.noStore())
+				.body(service.retrieve(applicationId, request, idempotencyKey, correlationId, jwt));
+	}
 }

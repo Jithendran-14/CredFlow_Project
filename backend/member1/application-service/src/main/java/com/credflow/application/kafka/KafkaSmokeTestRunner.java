@@ -11,62 +11,43 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
 @Component
-@ConditionalOnProperty(
-        prefix = "credflow.kafka",
-        name = "smoke-test-enabled",
-        havingValue = "true"
-)
+@ConditionalOnProperty(prefix = "credflow.kafka", name = "smoke-test-enabled", havingValue = "true")
 public class KafkaSmokeTestRunner implements ApplicationRunner {
 
-    private static final Logger log =
-            LoggerFactory.getLogger(KafkaSmokeTestRunner.class);
+	private static final Logger log = LoggerFactory.getLogger(KafkaSmokeTestRunner.class);
 
-    private final KafkaTemplate<String, String> kafkaTemplate;
+	private final KafkaTemplate<String, String> kafkaTemplate;
 
-    public KafkaSmokeTestRunner(
-            KafkaTemplate<String, String> kafkaTemplate) {
-        this.kafkaTemplate = kafkaTemplate;
-    }
+	public KafkaSmokeTestRunner(KafkaTemplate<String, String> kafkaTemplate) {
+		this.kafkaTemplate = kafkaTemplate;
+	}
 
-    @Override
-    public void run(ApplicationArguments args) {
+	@Override
+	public void run(ApplicationArguments args) {
 
-        String eventId = UUID.randomUUID().toString();
+		String eventId = UUID.randomUUID().toString();
 
-        String payload = """
-                {
-                  "eventId": "%s",
-                  "eventType": "kafka.smoke-test",
-                  "message": "Message from Application Service"
-                }
-                """.formatted(eventId);
+		String payload = """
+				{
+				  "eventId": "%s",
+				  "eventType": "kafka.smoke-test",
+				  "message": "Message from Application Service"
+				}
+				""".formatted(eventId);
 
-        log.info("Sending Kafka smoke test: eventId={}", eventId);
+		log.info("Sending Kafka smoke test: eventId={}", eventId);
 
-        kafkaTemplate.send(
-                "application.submitted",
-                eventId,
-                payload
-        ).whenComplete((result, exception) -> {
+		kafkaTemplate.send("application.submitted", eventId, payload).whenComplete((result, exception) -> {
 
-            if (exception != null) {
-                log.error(
-                        "Kafka smoke test failed: eventId=" + eventId,
-                        exception
-                );
-                return;
-            }
+			if (exception != null) {
+				log.error("Kafka smoke test failed: eventId=" + eventId, exception);
+				return;
+			}
 
-            var metadata = result.getRecordMetadata();
+			var metadata = result.getRecordMetadata();
 
-            log.info(
-                    "Kafka smoke test acknowledged: eventId={}, "
-                            + "topic={}, partition={}, offset={}",
-                    eventId,
-                    metadata.topic(),
-                    metadata.partition(),
-                    metadata.offset()
-            );
-        });
-    }
+			log.info("Kafka smoke test acknowledged: eventId={}, " + "topic={}, partition={}, offset={}", eventId,
+					metadata.topic(), metadata.partition(), metadata.offset());
+		});
+	}
 }

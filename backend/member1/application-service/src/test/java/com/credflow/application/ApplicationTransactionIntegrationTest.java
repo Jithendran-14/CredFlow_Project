@@ -19,57 +19,46 @@ import java.sql.Statement;
 @ActiveProfiles("test")
 class ApplicationTransactionIntegrationTest {
 
-    @Autowired
-    private DataSource dataSource;
+	@Autowired
+	private DataSource dataSource;
 
-    @Test
-    void shouldConnectOnlyToApplicationTestSchema() throws Exception {
+	@Test
+	void shouldConnectOnlyToApplicationTestSchema() throws Exception {
 
-        try (Connection connection = dataSource.getConnection();
-             Statement statement = connection.createStatement()) {
+		try (Connection connection = dataSource.getConnection(); Statement statement = connection.createStatement()) {
 
-            // Confirm the Oracle user and PDB.
-            try (ResultSet resultSet = statement.executeQuery(
-                    """
-                    SELECT
-                        SYS_CONTEXT('USERENV', 'CURRENT_USER'),
-                        SYS_CONTEXT('USERENV', 'CON_NAME')
-                    FROM DUAL
-                    """)) {
+			// Confirm the Oracle user and PDB.
+			try (ResultSet resultSet = statement.executeQuery("""
+					SELECT
+					    SYS_CONTEXT('USERENV', 'CURRENT_USER'),
+					    SYS_CONTEXT('USERENV', 'CON_NAME')
+					FROM DUAL
+					""")) {
 
-                assertTrue(resultSet.next());
+				assertTrue(resultSet.next());
 
-                assertEquals(
-                        "CF_APPLICATION_TEST",
-                        resultSet.getString(1),
-                        "Integration test connected to the wrong Oracle schema!");
+				assertEquals("CF_APPLICATION_TEST", resultSet.getString(1),
+						"Integration test connected to the wrong Oracle schema!");
 
-                assertEquals(
-                        "FREEPDB1",
-                        resultSet.getString(2),
-                        "Integration test connected to the wrong Oracle PDB!");
-            }
+				assertEquals("FREEPDB1", resultSet.getString(2), "Integration test connected to the wrong Oracle PDB!");
+			}
 
-            // Confirm all four expected tables exist.
-            try (ResultSet resultSet = statement.executeQuery(
-                    """
-                    SELECT COUNT(*)
-                    FROM USER_TABLES
-                    WHERE TABLE_NAME IN (
-                        'CF_APPLICATIONS',
-                        'CF_IDEMPOTENCY_KEYS',
-                        'CF_SELLER_MAPPINGS',
-                        'CF_OUTBOX_EVENTS'
-                    )
-                    """)) {
+			// Confirm all four expected tables exist.
+			try (ResultSet resultSet = statement.executeQuery("""
+					SELECT COUNT(*)
+					FROM USER_TABLES
+					WHERE TABLE_NAME IN (
+					    'CF_APPLICATIONS',
+					    'CF_IDEMPOTENCY_KEYS',
+					    'CF_SELLER_MAPPINGS',
+					    'CF_OUTBOX_EVENTS'
+					)
+					""")) {
 
-                assertTrue(resultSet.next());
+				assertTrue(resultSet.next());
 
-                assertEquals(
-                        4,
-                        resultSet.getInt(1),
-                        "Expected four tables in the test schema");
-            }
-        }
-    }
+				assertEquals(4, resultSet.getInt(1), "Expected four tables in the test schema");
+			}
+		}
+	}
 }

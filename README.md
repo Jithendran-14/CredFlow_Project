@@ -1,5 +1,13 @@
 # CredFlow end to end project
 
+## Setup on a new Windows laptop
+
+For a source-only checkout on another laptop, follow [SETUP-WINDOWS.md](SETUP-WINDOWS.md).
+It covers prerequisites, fresh Oracle schemas, private configuration, new RSA PEM
+keys, scoped service identities, Kafka KRaft initialization, builds and verification.
+The fresh-setup helpers refuse existing private runtime configuration and are not
+an upgrade or password-reset procedure for an already configured installation.
+
 CredFlow is a local training project connecting seller loan requests, marketplace submission, permissions, verification, eligibility, lender review, offers and audit history. The UI uses HTML, CSS and JavaScript. All CredFlow business and account data is stored in Oracle. Kafka delivers durable workflow events. Verification, financial providers and lenders are simulated; no money is disbursed or collected.
 
 ## Start and stop

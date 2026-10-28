@@ -1,7 +1,4 @@
 package com.credflow.application.dto;
 
-public record OwnershipCheckResponse(
-        String applicationId,
-        boolean ownsApplication
-) {
+public record OwnershipCheckResponse(String applicationId, boolean ownsApplication) {
 }

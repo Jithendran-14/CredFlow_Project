@@ -17,170 +17,121 @@ import jakarta.validation.Validator;
 import tools.jackson.databind.ObjectMapper;
 
 @Component
-@ConditionalOnProperty(
-        name = "credflow.verification-finalization.enabled",
-        havingValue = "true"
-)
+@ConditionalOnProperty(name = "credflow.verification-finalization.enabled", havingValue = "true")
 public class VerificationFinalizationWorker {
 
-    private static final Logger log =
-            LoggerFactory.getLogger(
-                    VerificationFinalizationWorker.class
-            );
+	private static final Logger log = LoggerFactory.getLogger(VerificationFinalizationWorker.class);
 
-    private final JdbcTemplate jdbc;
-    private final ObjectMapper objectMapper;
-    private final Validator validator;
-    private final VerificationPrecheckService prechecks;
-    private final VerificationFinalizationTransactionService finalization;
+	private final JdbcTemplate jdbc;
+	private final ObjectMapper objectMapper;
+	private final Validator validator;
+	private final VerificationPrecheckService prechecks;
+	private final VerificationFinalizationTransactionService finalization;
 
-    public VerificationFinalizationWorker(
-            JdbcTemplate jdbc,
-            ObjectMapper objectMapper,
-            Validator validator,
-            VerificationPrecheckService prechecks,
-            VerificationFinalizationTransactionService finalization) {
+	public VerificationFinalizationWorker(JdbcTemplate jdbc, ObjectMapper objectMapper, Validator validator,
+			VerificationPrecheckService prechecks, VerificationFinalizationTransactionService finalization) {
 
-        this.jdbc = jdbc;
-        this.objectMapper = objectMapper;
-        this.validator = validator;
-        this.prechecks = prechecks;
-        this.finalization = finalization;
-    }
+		this.jdbc = jdbc;
+		this.objectMapper = objectMapper;
+		this.validator = validator;
+		this.prechecks = prechecks;
+		this.finalization = finalization;
+	}
 
-    private record Candidate(
-            String verificationId,
-            String payload
-    ) {
-    }
+	private record Candidate(String verificationId, String payload) {
+	}
 
-    @Scheduled(
-        fixedDelayString =
-            "${credflow.verification-finalization.fixed-delay-ms:5000}"
-    )
-    public void finalizeReadyResults() {
+	@Scheduled(fixedDelayString = "${credflow.verification-finalization.fixed-delay-ms:5000}")
+	public void finalizeReadyResults() {
 
-        try {
-            var candidates = jdbc.query("""
-                    SELECT
-                        r.VERIFICATION_ID,
-                        r.REQUEST_PAYLOAD
-                    FROM CF_VERIFICATION_REQUESTS r
-                    JOIN CF_IDENTITY_CHECKS i
-                      ON i.VERIFICATION_ID = r.VERIFICATION_ID
-                    WHERE r.PROCESSING_STATUS = 'PENDING'
-                      AND i.CHECK_STATUS = 'RECEIVED'
-                      AND r.NEXT_ATTEMPT_AT <= SYSTIMESTAMP
-                      AND NOT EXISTS (
-                          SELECT 1
-                          FROM CF_VERIFICATION_RESULTS result
-                          WHERE result.VERIFICATION_ID =
-                                r.VERIFICATION_ID
-                      )
-                    ORDER BY r.UPDATED_AT, r.VERIFICATION_ID
-                    FETCH FIRST 10 ROWS ONLY
-                    """,
-                    (rs, rowNumber) -> new Candidate(
-                            rs.getString("VERIFICATION_ID"),
-                            rs.getString("REQUEST_PAYLOAD")
-                    )
-            );
+		try {
+			var candidates = jdbc.query("""
+					SELECT
+					    r.VERIFICATION_ID,
+					    r.REQUEST_PAYLOAD
+					FROM CF_VERIFICATION_REQUESTS r
+					JOIN CF_IDENTITY_CHECKS i
+					  ON i.VERIFICATION_ID = r.VERIFICATION_ID
+					WHERE r.PROCESSING_STATUS = 'PENDING'
+					  AND i.CHECK_STATUS = 'RECEIVED'
+					  AND r.NEXT_ATTEMPT_AT <= SYSTIMESTAMP
+					  AND NOT EXISTS (
+					      SELECT 1
+					      FROM CF_VERIFICATION_RESULTS result
+					      WHERE result.VERIFICATION_ID =
+					            r.VERIFICATION_ID
+					  )
+					ORDER BY r.UPDATED_AT, r.VERIFICATION_ID
+					FETCH FIRST 10 ROWS ONLY
+					""",
+					(rs, rowNumber) -> new Candidate(rs.getString("VERIFICATION_ID"), rs.getString("REQUEST_PAYLOAD")));
 
-            for (var candidate : candidates) {
-                finalizeOne(candidate);
-            }
+			for (var candidate : candidates) {
+				finalizeOne(candidate);
+			}
 
-        } catch (Exception exception) {
-            log.error(
-                    "Verification finalisation poll failed: errorType={}",
-                    exception.getClass().getSimpleName()
-            );
-        }
-    }
+		} catch (Exception exception) {
+			log.error("Verification finalisation poll failed: errorType={}", exception.getClass().getSimpleName());
+		}
+	}
 
-    private void finalizeOne(Candidate candidate) {
+	private void finalizeOne(Candidate candidate) {
 
-        try {
-            VerificationRequest request = objectMapper.readValue(
-                    candidate.payload(),
-                    VerificationRequest.class
-            );
+		try {
+			VerificationRequest request = objectMapper.readValue(candidate.payload(), VerificationRequest.class);
 
-            if (request == null
-                    || !validator.validate(request).isEmpty()
-                    || !candidate.verificationId().equals(
-                            request.verificationId().toString())) {
+			if (request == null || !validator.validate(request).isEmpty()
+					|| !candidate.verificationId().equals(request.verificationId().toString())) {
 
-                throw new IllegalStateException(
-                        "INVALID_STORED_VERIFICATION_REQUEST"
-                );
-            }
+				throw new IllegalStateException("INVALID_STORED_VERIFICATION_REQUEST");
+			}
 
-            // Remote application check happens before the final DB transaction.
-            var result = prechecks.check(request);
+			// Remote application check happens before the final DB transaction.
+			var result = prechecks.check(request);
 
-            if (result.outcome()
-                    == VerificationPrecheckResult.Outcome.RETRY_LATER) {
+			if (result.outcome() == VerificationPrecheckResult.Outcome.RETRY_LATER) {
 
-                retryLater(
-                        candidate.verificationId(),
-                        result.reasonCode()
-                );
-                return;
-            }
+				retryLater(candidate.verificationId(), result.reasonCode());
+				return;
+			}
 
-            finalization.finalizeProviderResult(
-                    UUID.fromString(candidate.verificationId()),
-                    result
-            );
+			finalization.finalizeProviderResult(UUID.fromString(candidate.verificationId()), result);
 
-        } catch (Exception exception) {
-            retryLater(
-                    candidate.verificationId(),
-                    "FINALIZATION_PROCESSING_ERROR"
-            );
+		} catch (Exception exception) {
+			retryLater(candidate.verificationId(), "FINALIZATION_PROCESSING_ERROR");
 
-            log.warn(
-                    "Verification finalisation failed: "
-                            + "verificationId={}, errorType={}",
-                    candidate.verificationId(),
-                    exception.getClass().getSimpleName()
-            );
-        }
-    }
+			log.warn("Verification finalisation failed: " + "verificationId={}, errorType={}",
+					candidate.verificationId(), exception.getClass().getSimpleName());
+		}
+	}
 
-    private void retryLater(
-            String verificationId,
-            String reason) {
+	private void retryLater(String verificationId, String reason) {
 
-        jdbc.update("""
-                UPDATE CF_VERIFICATION_REQUESTS
-                SET PROCESSING_STATUS =
-                        CASE
-                            WHEN FINALIZATION_ATTEMPTS + 1 >= 20
-                            THEN 'DEAD'
-                            ELSE 'PENDING'
-                        END,
-                    NEXT_ATTEMPT_AT =
-                        SYSTIMESTAMP + NUMTODSINTERVAL(
-                            LEAST(
-                                300,
-                                5 * POWER(
-                                    2,
-                                    LEAST(FINALIZATION_ATTEMPTS, 6)
-                                )
-                            ),
-                            'SECOND'
-                        ),
-                    FINALIZATION_ATTEMPTS =
-                        FINALIZATION_ATTEMPTS + 1,
-                    LAST_FINALIZATION_ERROR = ?,
-                    UPDATED_AT = SYSTIMESTAMP
-                WHERE VERIFICATION_ID = ?
-                  AND PROCESSING_STATUS = 'PENDING'
-                """,
-                reason,
-                verificationId
-        );
-    }
+		jdbc.update("""
+				UPDATE CF_VERIFICATION_REQUESTS
+				SET PROCESSING_STATUS =
+				        CASE
+				            WHEN FINALIZATION_ATTEMPTS + 1 >= 20
+				            THEN 'DEAD'
+				            ELSE 'PENDING'
+				        END,
+				    NEXT_ATTEMPT_AT =
+				        SYSTIMESTAMP + NUMTODSINTERVAL(
+				            LEAST(
+				                300,
+				                5 * POWER(
+				                    2,
+				                    LEAST(FINALIZATION_ATTEMPTS, 6)
+				                )
+				            ),
+				            'SECOND'
+				        ),
+				    FINALIZATION_ATTEMPTS =
+				        FINALIZATION_ATTEMPTS + 1,
+				    LAST_FINALIZATION_ERROR = ?,
+				    UPDATED_AT = SYSTIMESTAMP
+				WHERE VERIFICATION_ID = ?
+				  AND PROCESSING_STATUS = 'PENDING'
+				""", reason, verificationId);
+	}
 }

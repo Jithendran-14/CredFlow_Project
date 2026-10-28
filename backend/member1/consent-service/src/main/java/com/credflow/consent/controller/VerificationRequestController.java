@@ -17,31 +17,19 @@ import jakarta.validation.Valid;
 @RequestMapping("/api/v1/internal/verifications")
 public class VerificationRequestController {
 
-    private final VerificationRequestService service;
+	private final VerificationRequestService service;
 
-    public VerificationRequestController(
-            VerificationRequestService service) {
-        this.service = service;
-    }
+	public VerificationRequestController(VerificationRequestService service) {
+		this.service = service;
+	}
 
-    @PostMapping
-    public ResponseEntity<VerificationAcceptedResponse> accept(
-            @Valid @RequestBody VerificationRequest request,
-            @RequestHeader(
-                    value = "Idempotency-Key",
-                    required = false
-            ) String idempotencyKey,
-            @RequestHeader(
-                    value = "X-Correlation-ID",
-                    required = false
-            ) String correlationId) {
+	@PostMapping
+	public ResponseEntity<VerificationAcceptedResponse> accept(@Valid @RequestBody VerificationRequest request,
+			@RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey,
+			@RequestHeader(value = "X-Correlation-ID", required = false) String correlationId) {
 
-        VerificationAcceptedResponse response = service.accept(
-                request,
-                idempotencyKey,
-                correlationId
-        );
+		VerificationAcceptedResponse response = service.accept(request, idempotencyKey, correlationId);
 
-        return ResponseEntity.accepted().body(response);
-    }
+		return ResponseEntity.accepted().body(response);
+	}
 }

@@ -8,15 +8,13 @@ import org.springframework.web.client.RestClient;
 @Configuration
 public class InternalHttpConfig {
 
-    @Bean
-    public RestClient consentInternalRestClient() {
+	@Bean
+	public RestClient consentInternalRestClient() {
 
-        var factory = new SimpleClientHttpRequestFactory();
-        factory.setConnectTimeout(2000);
-        factory.setReadTimeout(4000);
+		var factory = new SimpleClientHttpRequestFactory();
+		factory.setConnectTimeout(2000);
+		factory.setReadTimeout(4000);
 
-        return RestClient.builder()
-                .requestFactory(factory)
-                .build();
-    }
+		return RestClient.builder().requestFactory(factory).build();
+	}
 }

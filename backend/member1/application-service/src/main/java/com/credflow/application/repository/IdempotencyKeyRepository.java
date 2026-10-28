@@ -6,11 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.credflow.application.entity.IdempotencyKeyEntity;
 
-public interface IdempotencyKeyRepository
-        extends JpaRepository<IdempotencyKeyEntity, Long> {
+public interface IdempotencyKeyRepository extends JpaRepository<IdempotencyKeyEntity, Long> {
 
-    Optional<IdempotencyKeyEntity> findByMarketplaceIdAndIdempotencyKey(
-            String marketplaceId,
-            String idempotencyKey
-    );
+	Optional<IdempotencyKeyEntity> findByMarketplaceIdAndIdempotencyKey(String marketplaceId, String idempotencyKey);
 }

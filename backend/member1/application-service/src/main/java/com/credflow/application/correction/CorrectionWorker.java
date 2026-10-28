@@ -1,13 +1,96 @@
 package com.credflow.application.correction;
-import java.net.*;import java.net.http.*;import java.time.*;import java.util.*;import java.nio.charset.StandardCharsets;import org.springframework.beans.factory.annotation.Value;import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;import org.springframework.scheduling.annotation.Scheduled;import org.springframework.stereotype.Component;import tools.jackson.databind.ObjectMapper;
-@Component @ConditionalOnProperty(name="credflow.corrections.enabled",havingValue="true")
+
+import java.net.*;
+import java.net.http.*;
+import java.time.*;
+import java.util.*;
+import java.nio.charset.StandardCharsets;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
+import tools.jackson.databind.ObjectMapper;
+
+@Component
+@ConditionalOnProperty(name = "credflow.corrections.enabled", havingValue = "true")
 public class CorrectionWorker {
- private final CorrectionService service;private final ObjectMapper json;private final String url,oauth,client,secret;private final HttpClient http=HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(3)).build();private String cached;private Instant expires=Instant.EPOCH;
- public CorrectionWorker(CorrectionService service,ObjectMapper json,@Value("${credflow.corrections.workflow-url:http://127.0.0.1:8084}")String url,@Value("${credflow.corrections.oauth-url:http://127.0.0.1:8085/oauth2/token}")String oauth,@Value("${credflow.corrections.client-id:application-service}")String client,@Value("${credflow.corrections.client-secret:}")String secret){this.service=service;this.json=json;this.url=url;this.oauth=oauth;this.client=client;this.secret=secret;}
- private String token()throws Exception{if(cached!=null&&expires.isAfter(Instant.now().plusSeconds(15)))return cached;var r=http.send(HttpRequest.newBuilder(URI.create(oauth)).timeout(Duration.ofSeconds(8)).header("Content-Type","application/x-www-form-urlencoded").header("Authorization","Basic "+Base64.getEncoder().encodeToString((client+":"+secret).getBytes(StandardCharsets.ISO_8859_1))).POST(HttpRequest.BodyPublishers.ofString("grant_type=client_credentials&scope=workflow.revision")).build(),HttpResponse.BodyHandlers.ofString());if(r.statusCode()!=200)throw new IllegalStateException("Service authentication unavailable");var body=json.readTree(r.body());cached=body.path("access_token").asText();expires=Instant.now().plusSeconds(body.path("expires_in").asLong(60));return cached;}
- @Scheduled(fixedDelayString="${credflow.corrections.poll-ms:2000}")public void tick(){try{for(String id:service.pending())process(id);}catch(Exception ex){org.slf4j.LoggerFactory.getLogger(getClass()).warn("Correction queue temporarily unavailable ({})",ex.getClass().getSimpleName());}}
- private void process(String id){String claim=UUID.randomUUID().toString();var row=service.claim(id,claim);if(row.isEmpty())return;try{var payload=Map.of("operationId",id,"expectedRevision",row.get("EXPECTED_REVISION"),"newRevision",row.get("NEW_REVISION"),"originActor",Map.of("type","HUMAN","subject",row.get("ACTOR_ID")));
-  var r=http.send(HttpRequest.newBuilder(URI.create(url+"/api/v1/internal/applications/"+row.get("APPLICATION_ID")+"/revision-guard")).timeout(Duration.ofSeconds(10)).header("Authorization","Bearer "+token()).header("Content-Type","application/json").header("X-Correlation-ID",id).POST(HttpRequest.BodyPublishers.ofString(json.writeValueAsString(payload))).build(),HttpResponse.BodyHandlers.ofString());
-  if(r.statusCode()==409||r.statusCode()==404){service.failure(id,claim,true);return;}if(r.statusCode()!=200||!json.readTree(r.body()).path("authorized").asBoolean())throw new IllegalStateException("Correction guard unavailable");service.apply(id,claim);
- }catch(Exception ex){service.failure(id,claim,false);}}
+	private final CorrectionService service;
+	private final ObjectMapper json;
+	private final String url, oauth, client, secret;
+	private final HttpClient http = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(3)).build();
+	private String cached;
+	private Instant expires = Instant.EPOCH;
+
+	public CorrectionWorker(CorrectionService service, ObjectMapper json,
+			@Value("${credflow.corrections.workflow-url:http://127.0.0.1:8084}") String url,
+			@Value("${credflow.corrections.oauth-url:http://127.0.0.1:8085/oauth2/token}") String oauth,
+			@Value("${credflow.corrections.client-id:application-service}") String client,
+			@Value("${credflow.corrections.client-secret:}") String secret) {
+		this.service = service;
+		this.json = json;
+		this.url = url;
+		this.oauth = oauth;
+		this.client = client;
+		this.secret = secret;
+	}
+
+	private String token() throws Exception {
+		if (cached != null && expires.isAfter(Instant.now().plusSeconds(15)))
+			return cached;
+		var r = http.send(
+				HttpRequest.newBuilder(URI.create(oauth)).timeout(Duration.ofSeconds(8))
+						.header("Content-Type", "application/x-www-form-urlencoded")
+						.header("Authorization",
+								"Basic " + Base64.getEncoder()
+										.encodeToString((client + ":" + secret).getBytes(StandardCharsets.ISO_8859_1)))
+						.POST(HttpRequest.BodyPublishers
+								.ofString("grant_type=client_credentials&scope=workflow.revision"))
+						.build(),
+				HttpResponse.BodyHandlers.ofString());
+		if (r.statusCode() != 200)
+			throw new IllegalStateException("Service authentication unavailable");
+		var body = json.readTree(r.body());
+		cached = body.path("access_token").asText();
+		expires = Instant.now().plusSeconds(body.path("expires_in").asLong(60));
+		return cached;
+	}
+
+	@Scheduled(fixedDelayString = "${credflow.corrections.poll-ms:2000}")
+	public void tick() {
+		try {
+			for (String id : service.pending())
+				process(id);
+		} catch (Exception ex) {
+			org.slf4j.LoggerFactory.getLogger(getClass()).warn("Correction queue temporarily unavailable ({})",
+					ex.getClass().getSimpleName());
+		}
+	}
+
+	private void process(String id) {
+		String claim = UUID.randomUUID().toString();
+		var row = service.claim(id, claim);
+		if (row.isEmpty())
+			return;
+		try {
+			var payload = Map.of("operationId", id, "expectedRevision", row.get("EXPECTED_REVISION"), "newRevision",
+					row.get("NEW_REVISION"), "originActor", Map.of("type", "HUMAN", "subject", row.get("ACTOR_ID")));
+			var r = http.send(
+					HttpRequest
+							.newBuilder(URI.create(url + "/api/v1/internal/applications/" + row.get("APPLICATION_ID")
+									+ "/revision-guard"))
+							.timeout(Duration.ofSeconds(10)).header("Authorization", "Bearer " + token())
+							.header("Content-Type", "application/json").header("X-Correlation-ID", id)
+							.POST(HttpRequest.BodyPublishers.ofString(json.writeValueAsString(payload))).build(),
+					HttpResponse.BodyHandlers.ofString());
+			if (r.statusCode() == 409 || r.statusCode() == 404) {
+				service.failure(id, claim, true);
+				return;
+			}
+			if (r.statusCode() != 200 || !json.readTree(r.body()).path("authorized").asBoolean())
+				throw new IllegalStateException("Correction guard unavailable");
+			service.apply(id, claim);
+		} catch (Exception ex) {
+			service.failure(id, claim, false);
+		}
+	}
 }

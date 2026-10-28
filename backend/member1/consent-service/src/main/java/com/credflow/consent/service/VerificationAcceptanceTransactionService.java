@@ -19,84 +19,54 @@ import tools.jackson.databind.ObjectMapper;
 @Service
 public class VerificationAcceptanceTransactionService {
 
-    private final VerificationRequestRepository repository;
-    private final ObjectMapper objectMapper;
+	private final VerificationRequestRepository repository;
+	private final ObjectMapper objectMapper;
 
-    public VerificationAcceptanceTransactionService(
-            VerificationRequestRepository repository,
-            ObjectMapper objectMapper) {
+	public VerificationAcceptanceTransactionService(VerificationRequestRepository repository,
+			ObjectMapper objectMapper) {
 
-        this.repository = repository;
-        this.objectMapper = objectMapper;
-    }
+		this.repository = repository;
+		this.objectMapper = objectMapper;
+	}
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public VerificationAcceptedResponse accept(
-            VerificationRequest request,
-            String requestHash) {
+	@Transactional(propagation = Propagation.REQUIRES_NEW)
+	public VerificationAcceptedResponse accept(VerificationRequest request, String requestHash) {
 
-        var existing = repository.findById(
-                request.verificationId().toString());
+		var existing = repository.findById(request.verificationId().toString());
 
-        if (existing.isPresent()) {
-            return replayResponse(existing.get(), requestHash);
-        }
+		if (existing.isPresent()) {
+			return replayResponse(existing.get(), requestHash);
+		}
 
-        String payload = objectMapper.writeValueAsString(request);
+		String payload = objectMapper.writeValueAsString(request);
 
-        VerificationRequestEntity entity =
-                new VerificationRequestEntity(
-                        request.verificationId(),
-                        request.applicationId(),
-                        request.applicationRevision(),
-                        request.consentId(),
-                        request.consentVersion(),
-                        requestHash,
-                        payload,
-                        request.correlationId(),
-                        request.causationId()
-                );
+		VerificationRequestEntity entity = new VerificationRequestEntity(request.verificationId(),
+				request.applicationId(), request.applicationRevision(), request.consentId(), request.consentVersion(),
+				requestHash, payload, request.correlationId(), request.causationId());
 
-        VerificationRequestEntity saved =
-                repository.saveAndFlush(entity);
+		VerificationRequestEntity saved = repository.saveAndFlush(entity);
 
-        return response(saved);
-    }
+		return response(saved);
+	}
 
-    @Transactional(
-            propagation = Propagation.REQUIRES_NEW,
-            readOnly = true
-    )
-    public Optional<VerificationAcceptedResponse> findReplay(
-            UUID verificationId,
-            String requestHash) {
+	@Transactional(propagation = Propagation.REQUIRES_NEW, readOnly = true)
+	public Optional<VerificationAcceptedResponse> findReplay(UUID verificationId, String requestHash) {
 
-        return repository.findById(verificationId.toString())
-                .map(entity -> replayResponse(entity, requestHash));
-    }
+		return repository.findById(verificationId.toString()).map(entity -> replayResponse(entity, requestHash));
+	}
 
-    private VerificationAcceptedResponse replayResponse(
-            VerificationRequestEntity entity,
-            String requestHash) {
+	private VerificationAcceptedResponse replayResponse(VerificationRequestEntity entity, String requestHash) {
 
-        if (!entity.getRequestHash().equals(requestHash)) {
-            throw new ResponseStatusException(
-                    HttpStatus.CONFLICT,
-                    "VERIFICATION_REQUEST_CONFLICT"
-            );
-        }
+		if (!entity.getRequestHash().equals(requestHash)) {
+			throw new ResponseStatusException(HttpStatus.CONFLICT, "VERIFICATION_REQUEST_CONFLICT");
+		}
 
-        return response(entity);
-    }
+		return response(entity);
+	}
 
-    private VerificationAcceptedResponse response(
-            VerificationRequestEntity entity) {
+	private VerificationAcceptedResponse response(VerificationRequestEntity entity) {
 
-        return new VerificationAcceptedResponse(
-                UUID.fromString(entity.getVerificationId()),
-                UUID.fromString(entity.getApplicationId()),
-                entity.getApplicationRevision(),
-                "ACCEPTED"
-        );
-    }
+		return new VerificationAcceptedResponse(UUID.fromString(entity.getVerificationId()),
+				UUID.fromString(entity.getApplicationId()), entity.getApplicationRevision(), "ACCEPTED");
+	}
 }

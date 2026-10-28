@@ -1,9 +1,46 @@
 package com.credflow.auth.management;
-import java.util.*;import org.junit.jupiter.api.Test;import org.springframework.jdbc.core.JdbcTemplate;import org.springframework.security.oauth2.jwt.Jwt;import org.springframework.security.crypto.password.PasswordEncoder;import com.credflow.auth.repository.AuthUserRepository;import static org.mockito.Mockito.*;import static org.mockito.ArgumentMatchers.*;import static org.junit.jupiter.api.Assertions.*;
+
+import java.util.*;
+import org.junit.jupiter.api.Test;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import com.credflow.auth.repository.AuthUserRepository;
+import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.junit.jupiter.api.Assertions.*;
+
 class MarketplaceManagementTest {
- final JdbcTemplate db=mock(JdbcTemplate.class);final MarketplaceManagement service=new MarketplaceManagement(db,mock(AuthUserRepository.class),mock(PasswordEncoder.class));
- Jwt jwt(String role){return Jwt.withTokenValue("unit").header("alg","RS256").subject("admin").claim("roles",List.of(role)).build();}
- @Test void nonAdminCannotManageMarketplaces(){assertThrows(Exception.class,()->service.list(jwt("SELLER"),0,20));assertThrows(Exception.class,()->service.delete(UUID.randomUUID().toString(),0,jwt("MARKETPLACE")));verifyNoInteractions(db);}
- @Test void staleMarketplaceUpdateIsRejected(){String id=UUID.randomUUID().toString();when(db.queryForList(contains("FOR UPDATE"),eq(id))).thenReturn(List.of(Map.of("ROW_VERSION",1L)));assertThrows(Exception.class,()->service.update(id,new MarketplaceUpdate("Name","new@example.test","ACTIVE",0L),jwt("ADMIN")));verify(db,never()).update(anyString(),any(Object[].class));}
- @Test void linkedMarketplaceCannotBeDeleted(){String id=UUID.randomUUID().toString();when(db.queryForList(contains("FOR UPDATE"),eq(id))).thenReturn(List.of(Map.of("ROW_VERSION",0L)));when(db.queryForObject(contains("COUNT(*) FROM CF_SELLER_PROFILES"),eq(Long.class),eq(id))).thenReturn(1L);assertThrows(Exception.class,()->service.delete(id,0,jwt("ADMIN")));verify(db,never()).update(anyString(),any(Object[].class));}
+	final JdbcTemplate db = mock(JdbcTemplate.class);
+	final MarketplaceManagement service = new MarketplaceManagement(db, mock(AuthUserRepository.class),
+			mock(PasswordEncoder.class));
+
+	Jwt jwt(String role) {
+		return Jwt.withTokenValue("unit").header("alg", "RS256").subject("admin").claim("roles", List.of(role)).build();
+	}
+
+	@Test
+	void nonAdminCannotManageMarketplaces() {
+		assertThrows(Exception.class, () -> service.list(jwt("SELLER"), 0, 20));
+		assertThrows(Exception.class, () -> service.delete(UUID.randomUUID().toString(), 0, jwt("MARKETPLACE")));
+		verifyNoInteractions(db);
+	}
+
+	@Test
+	void staleMarketplaceUpdateIsRejected() {
+		String id = UUID.randomUUID().toString();
+		when(db.queryForList(contains("FOR UPDATE"), eq(id))).thenReturn(List.of(Map.of("ROW_VERSION", 1L)));
+		assertThrows(Exception.class, () -> service.update(id,
+				new MarketplaceUpdate("Name", "new@example.test", "ACTIVE", 0L), jwt("ADMIN")));
+		verify(db, never()).update(anyString(), any(Object[].class));
+	}
+
+	@Test
+	void linkedMarketplaceCannotBeDeleted() {
+		String id = UUID.randomUUID().toString();
+		when(db.queryForList(contains("FOR UPDATE"), eq(id))).thenReturn(List.of(Map.of("ROW_VERSION", 0L)));
+		when(db.queryForObject(contains("COUNT(*) FROM CF_SELLER_PROFILES"), eq(Long.class), eq(id))).thenReturn(1L);
+		assertThrows(Exception.class, () -> service.delete(id, 0, jwt("ADMIN")));
+		verify(db, never()).update(anyString(), any(Object[].class));
+	}
 }

@@ -4,6 +4,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.credflow.consent.entity.VerificationRequestEntity;
 
-public interface VerificationRequestRepository
-        extends JpaRepository<VerificationRequestEntity, String> {
+public interface VerificationRequestRepository extends JpaRepository<VerificationRequestEntity, String> {
 }

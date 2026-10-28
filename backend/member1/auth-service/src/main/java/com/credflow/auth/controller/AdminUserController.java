@@ -16,22 +16,18 @@ import com.credflow.auth.service.AdminUserService;
 @RequestMapping("/api/v1/admin/users")
 public class AdminUserController {
 
-    private final AdminUserService adminUserService;
+	private final AdminUserService adminUserService;
 
-    public AdminUserController(AdminUserService adminUserService) {
-        this.adminUserService = adminUserService;
-    }
+	public AdminUserController(AdminUserService adminUserService) {
+		this.adminUserService = adminUserService;
+	}
 
-    @PostMapping
-    public ResponseEntity<Map<String, String>> createUser(
-            @Valid @RequestBody CreateUserRequest request) {
+	@PostMapping
+	public ResponseEntity<Map<String, String>> createUser(@Valid @RequestBody CreateUserRequest request) {
 
-        String publicUserId = adminUserService.createUser(request);
+		String publicUserId = adminUserService.createUser(request);
 
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(Map.of(
-                    "userId", publicUserId,
-                    "message", "User created successfully"
-                ));
-    }
+		return ResponseEntity.status(HttpStatus.CREATED)
+				.body(Map.of("userId", publicUserId, "message", "User created successfully"));
+	}
 }

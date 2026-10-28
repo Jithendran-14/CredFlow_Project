@@ -22,36 +22,21 @@ import jakarta.validation.Valid;
 @RequestMapping("/api/v1/applications")
 public class ConsentRevocationController {
 
-    private final ConsentRevocationService service;
+	private final ConsentRevocationService service;
 
-    public ConsentRevocationController(
-            ConsentRevocationService service) {
+	public ConsentRevocationController(ConsentRevocationService service) {
 
-        this.service = service;
-    }
+		this.service = service;
+	}
 
-    @PostMapping("/{applicationId}/consents/revoke")
-    public ResponseEntity<ConsentDecisionResponse> revoke(
-            @PathVariable("applicationId") UUID applicationId,
-            @Valid @RequestBody ConsentRevocationRequest request,
-            @RequestHeader(
-                    value = "Idempotency-Key",
-                    required = false
-            ) String idempotencyKey,
-            @RequestHeader(
-                    value = "X-Correlation-ID",
-                    required = false
-            ) String correlationId,
-            @AuthenticationPrincipal Jwt jwt) {
+	@PostMapping("/{applicationId}/consents/revoke")
+	public ResponseEntity<ConsentDecisionResponse> revoke(@PathVariable("applicationId") UUID applicationId,
+			@Valid @RequestBody ConsentRevocationRequest request,
+			@RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey,
+			@RequestHeader(value = "X-Correlation-ID", required = false) String correlationId,
+			@AuthenticationPrincipal Jwt jwt) {
 
-        return ResponseEntity.accepted().body(
-                service.revoke(
-                        applicationId,
-                        request,
-                        idempotencyKey,
-                        correlationId,
-                        jwt
-                )
-        );
-    }
+		return ResponseEntity.accepted()
+				.body(service.revoke(applicationId, request, idempotencyKey, correlationId, jwt));
+	}
 }

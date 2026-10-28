@@ -25,48 +25,45 @@ import jakarta.validation.Valid;
 @RequestMapping("/api/v1/applications")
 public class ApplicationController {
 
-    private final ApplicationService applicationService;
+	private final ApplicationService applicationService;
 
-    public ApplicationController(ApplicationService applicationService) {
-        this.applicationService = applicationService;
-    }
+	public ApplicationController(ApplicationService applicationService) {
+		this.applicationService = applicationService;
+	}
 
-    @PostMapping
-    public ResponseEntity<ApplicationResponse> createApplication(
-            @RequestHeader("Idempotency-Key") String idempotencyKey,
-            @Valid @RequestBody ApplicationRequest request,
-            @AuthenticationPrincipal Jwt jwt) {
+	@PostMapping
+	public ResponseEntity<ApplicationResponse> createApplication(
+			@RequestHeader("Idempotency-Key") String idempotencyKey, @Valid @RequestBody ApplicationRequest request,
+			@AuthenticationPrincipal Jwt jwt) {
 
-    	ApplicationResponse response =
-    	        applicationService.createApplication(
-    	                request, idempotencyKey, jwt);
+		ApplicationResponse response = applicationService.createApplication(request, idempotencyKey, jwt);
 
-        URI location = URI.create(
-                "/api/v1/applications/" + response.applicationId());
+		URI location = URI.create("/api/v1/applications/" + response.applicationId());
 
-        return ResponseEntity.created(location).body(response);
-    }
+		return ResponseEntity.created(location).body(response);
+	}
 
-    @GetMapping
-    public Object list(@org.springframework.web.bind.annotation.RequestParam(defaultValue="0") int page,
-                       @org.springframework.web.bind.annotation.RequestParam(defaultValue="20") int size,
-                       @AuthenticationPrincipal Jwt jwt) {
-        return applicationService.list(page, size, jwt);
-    }
+	@GetMapping
+	public Object list(@org.springframework.web.bind.annotation.RequestParam(defaultValue = "0") int page,
+			@org.springframework.web.bind.annotation.RequestParam(defaultValue = "20") int size,
+			@AuthenticationPrincipal Jwt jwt) {
+		return applicationService.list(page, size, jwt);
+	}
 
-    @GetMapping("/active")
-    public Object active(@AuthenticationPrincipal Jwt jwt,@org.springframework.web.bind.annotation.RequestParam(required=false) String purpose){return applicationService.activeApplication(jwt,purpose);}
+	@GetMapping("/active")
+	public Object active(@AuthenticationPrincipal Jwt jwt,
+			@org.springframework.web.bind.annotation.RequestParam(required = false) String purpose) {
+		return applicationService.activeApplication(jwt, purpose);
+	}
 
-    @GetMapping("/{applicationId}")
-    public ResponseEntity<ApplicationResponse> getApplication(
-            @PathVariable String applicationId,
-            @AuthenticationPrincipal Jwt jwt) {
+	@GetMapping("/{applicationId}")
+	public ResponseEntity<ApplicationResponse> getApplication(@PathVariable String applicationId,
+			@AuthenticationPrincipal Jwt jwt) {
 
-        UUID.fromString(applicationId);
+		UUID.fromString(applicationId);
 
-        ApplicationResponse response =
-                applicationService.getApplication(applicationId, jwt);
+		ApplicationResponse response = applicationService.getApplication(applicationId, jwt);
 
-        return ResponseEntity.ok(response);
-    }
+		return ResponseEntity.ok(response);
+	}
 }

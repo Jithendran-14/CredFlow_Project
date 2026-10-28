@@ -10,14 +10,14 @@ import org.springframework.stereotype.Component;
 @Component
 public class NbfcBCallbackScheduler {
 
-    private final NbfcBSimulatorService service;
+	private final NbfcBSimulatorService service;
 
-    public NbfcBCallbackScheduler(NbfcBSimulatorService service) {
-        this.service = service;
-    }
+	public NbfcBCallbackScheduler(NbfcBSimulatorService service) {
+		this.service = service;
+	}
 
-    @Scheduled(fixedDelayString = "${credflow.simulator.callback-poll-ms:1000}")
-    public void tick() {
-        service.callbacks();
-    }
+	@Scheduled(fixedDelayString = "${credflow.simulator.callback-poll-ms:1000}")
+	public void tick() {
+		service.callbacks();
+	}
 }

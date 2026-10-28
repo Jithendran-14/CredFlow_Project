@@ -8,17 +8,9 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
-public record FinancialWithdrawalRequest(
-        @NotNull
-        UUID financialConsentId,
+public record FinancialWithdrawalRequest(@NotNull UUID financialConsentId,
 
-        @NotNull
-        @Min(1)
-        Integer expectedFinancialConsentVersion,
+		@NotNull @Min(1) Integer expectedFinancialConsentVersion,
 
-        @NotBlank
-        @Size(max = 100)
-        @Pattern(regexp = "^[A-Z][A-Z0-9_]{0,99}$")
-        String reasonCode
-) {
+		@NotBlank @Size(max = 100) @Pattern(regexp = "^[A-Z][A-Z0-9_]{0,99}$") String reasonCode) {
 }

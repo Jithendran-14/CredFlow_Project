@@ -24,243 +24,169 @@ import tools.jackson.databind.ObjectMapper;
 @Component
 public class FinancialProviderClient {
 
-    private final RestClient http;
-    private final ServiceTokenProvider tokens;
-    private final ObjectMapper objectMapper;
-    private final String providerUrl;
+	private final RestClient http;
+	private final ServiceTokenProvider tokens;
+	private final ObjectMapper objectMapper;
+	private final String providerUrl;
 
-    public FinancialProviderClient(
-            @Qualifier("consentInternalRestClient")
-            RestClient http,
-            ServiceTokenProvider tokens,
-            ObjectMapper objectMapper,
-            @Value("${credflow.clients.financial.provider-url:}")
-            String providerUrl) {
+	public FinancialProviderClient(@Qualifier("consentInternalRestClient") RestClient http, ServiceTokenProvider tokens,
+			ObjectMapper objectMapper, @Value("${credflow.clients.financial.provider-url:}") String providerUrl) {
 
-        this.http = http;
-        this.tokens = tokens;
-        this.objectMapper = objectMapper;
-        this.providerUrl = providerUrl;
-    }
+		this.http = http;
+		this.tokens = tokens;
+		this.objectMapper = objectMapper;
+		this.providerUrl = providerUrl;
+	}
 
-    public Dataset retrieve(
-            ProviderRequest request,
-            String sourceProvider,
-            String correlationId) {
+	public Dataset retrieve(ProviderRequest request, String sourceProvider, String correlationId) {
 
-        if (providerUrl.isBlank()) {
-            throw unavailable("FINANCIAL_PROVIDER_NOT_CONFIGURED");
-        }
+		if (providerUrl.isBlank()) {
+			throw unavailable("FINANCIAL_PROVIDER_NOT_CONFIGURED");
+		}
 
-        String json;
+		String json;
 
-        try {
-            String token = tokens.getToken();
+		try {
+			String token = tokens.getToken();
 
-            try {
-                json = call(request, correlationId, token);
+			try {
+				json = call(request, correlationId, token);
 
-            } catch (HttpClientErrorException.Unauthorized exception) {
-                tokens.invalidate(token);
-                json = call(
-                        request,
-                        correlationId,
-                        tokens.getToken()
-                );
-            }
+			} catch (HttpClientErrorException.Unauthorized exception) {
+				tokens.invalidate(token);
+				json = call(request, correlationId, tokens.getToken());
+			}
 
-        } catch (RestClientException exception) {
-            throw unavailable("FINANCIAL_PROVIDER_UNAVAILABLE");
-        }
+		} catch (RestClientException exception) {
+			throw unavailable("FINANCIAL_PROVIDER_UNAVAILABLE");
+		}
 
-        try {
-            JsonNode root = objectMapper.readTree(json);
+		try {
+			JsonNode root = objectMapper.readTree(json);
 
-            if (!request.requestId().toString().equals(
-                        root.path("requestId").asText())
-                    || !request.sellerFixtureId().equals(
-                        root.path("sellerFixtureId").asText())
-                    || !"SUCCESS".equals(
-                        root.path("status").asText())) {
+			if (!request.requestId().toString().equals(root.path("requestId").asText())
+					|| !request.sellerFixtureId().equals(root.path("sellerFixtureId").asText())
+					|| !"SUCCESS".equals(root.path("status").asText())) {
 
-                throw invalid();
-            }
+				throw invalid();
+			}
 
-            JsonNode rawDataset = root.path("dataset");
+			JsonNode rawDataset = root.path("dataset");
 
-            if (!rawDataset.path("dataVersion").isIntegralNumber()
-                    || !rawDataset.path("dataVersion")
-                            .canConvertToLong()) {
+			if (!rawDataset.path("dataVersion").isIntegralNumber()
+					|| !rawDataset.path("dataVersion").canConvertToLong()) {
 
-                throw invalid();
-            }
+				throw invalid();
+			}
 
-            JsonNode months = rawDataset.path("months");
+			JsonNode months = rawDataset.path("months");
 
-            if (!months.isArray() || months.size() != 3) {
-                throw invalid();
-            }
+			if (!months.isArray() || months.size() != 3) {
+				throw invalid();
+			}
 
-            for (JsonNode month : months) {
-                String status = month.path("status").asText();
+			for (JsonNode month : months) {
+				String status = month.path("status").asText();
 
-                if ("AVAILABLE".equals(status)) {
-                    requireMoney(month.path("grossSalesAmount"));
-                    requireMoney(month.path("returnsAmount"));
-                    requireMoney(month.path("payoutAmount"));
+				if ("AVAILABLE".equals(status)) {
+					requireMoney(month.path("grossSalesAmount"));
+					requireMoney(month.path("returnsAmount"));
+					requireMoney(month.path("payoutAmount"));
 
-                    if (!month.path("orderCount").isIntegralNumber()
-                            || !month.path("orderCount")
-                                    .canConvertToLong()
-                            || !month.path("returnedOrderCount")
-                                    .isIntegralNumber()
-                            || !month.path("returnedOrderCount")
-                                    .canConvertToLong()) {
+					if (!month.path("orderCount").isIntegralNumber() || !month.path("orderCount").canConvertToLong()
+							|| !month.path("returnedOrderCount").isIntegralNumber()
+							|| !month.path("returnedOrderCount").canConvertToLong()) {
 
-                        throw invalid();
-                    }
+						throw invalid();
+					}
 
-                } else if ("MISSING".equals(status)) {
-                    if (month.hasNonNull("grossSalesAmount")
-                            || month.hasNonNull("returnsAmount")
-                            || month.hasNonNull("payoutAmount")
-                            || month.hasNonNull("orderCount")
-                            || month.hasNonNull("returnedOrderCount")) {
+				} else if ("MISSING".equals(status)) {
+					if (month.hasNonNull("grossSalesAmount") || month.hasNonNull("returnsAmount")
+							|| month.hasNonNull("payoutAmount") || month.hasNonNull("orderCount")
+							|| month.hasNonNull("returnedOrderCount")) {
 
-                        throw invalid();
-                    }
+						throw invalid();
+					}
 
-                } else {
-                    throw invalid();
-                }
-            }
+				} else {
+					throw invalid();
+				}
+			}
 
-            Dataset dataset = objectMapper.treeToValue(
-                    rawDataset,
-                    Dataset.class
-            );
+			Dataset dataset = objectMapper.treeToValue(rawDataset, Dataset.class);
 
-            validate(dataset, request, sourceProvider);
+			validate(dataset, request, sourceProvider);
 
-            return new Dataset(
-                    dataset.sourceProvider(),
-                    dataset.dataReference(),
-                    dataset.dataVersion(),
-                    dataset.retrievedAt()
-                            .withOffsetSameInstant(ZoneOffset.UTC),
-                    dataset.currency(),
-                    dataset.periodStart(),
-                    dataset.periodEndExclusive(),
-                    java.util.List.copyOf(dataset.months()),
-                    dataset.creditScoreBand()==null?"NOT_AVAILABLE":dataset.creditScoreBand()
-            );
+			return new Dataset(dataset.sourceProvider(), dataset.dataReference(), dataset.dataVersion(),
+					dataset.retrievedAt().withOffsetSameInstant(ZoneOffset.UTC), dataset.currency(),
+					dataset.periodStart(), dataset.periodEndExclusive(), java.util.List.copyOf(dataset.months()),
+					dataset.creditScoreBand() == null ? "NOT_AVAILABLE" : dataset.creditScoreBand());
 
-        } catch (ResponseStatusException exception) {
-            throw exception;
+		} catch (ResponseStatusException exception) {
+			throw exception;
 
-        } catch (RuntimeException exception) {
-            throw invalid();
-        }
-    }
+		} catch (RuntimeException exception) {
+			throw invalid();
+		}
+	}
 
-    private String call(
-            ProviderRequest request,
-            String correlationId,
-            String token) {
+	private String call(ProviderRequest request, String correlationId, String token) {
 
-        return http.post()
-                .uri(providerUrl)
-                .headers(headers -> {
-                    headers.setBearerAuth(token);
-                    headers.set(
-                            "Idempotency-Key",
-                            request.requestId().toString()
-                    );
-                    headers.set("X-Correlation-ID", correlationId);
-                })
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(request)
-                .retrieve()
-                .body(String.class);
-    }
+		return http.post().uri(providerUrl).headers(headers -> {
+			headers.setBearerAuth(token);
+			headers.set("Idempotency-Key", request.requestId().toString());
+			headers.set("X-Correlation-ID", correlationId);
+		}).contentType(MediaType.APPLICATION_JSON).body(request).retrieve().body(String.class);
+	}
 
-    private void validate(
-            Dataset dataset,
-            ProviderRequest request,
-            String sourceProvider) {
+	private void validate(Dataset dataset, ProviderRequest request, String sourceProvider) {
 
-        if (dataset == null
-                || !sourceProvider.equals(dataset.sourceProvider())
-                || dataset.dataReference() == null
-                || dataset.dataReference().isBlank()
-                || dataset.dataReference().length() > 200
-                || dataset.dataVersion() == null
-                || dataset.dataVersion() < 1
-                || dataset.retrievedAt() == null
-                || dataset.retrievedAt().isAfter(
-                        OffsetDateTime.now(ZoneOffset.UTC)
-                                .plusMinutes(1))
-                || !"INR".equals(dataset.currency())
-                || !request.periodStart().equals(
-                        dataset.periodStart())
-                || !request.periodEndExclusive().equals(
-                        dataset.periodEndExclusive())
-                || dataset.months() == null
-                || dataset.months().size() != 3) {
+		if (dataset == null || !sourceProvider.equals(dataset.sourceProvider()) || dataset.dataReference() == null
+				|| dataset.dataReference().isBlank() || dataset.dataReference().length() > 200
+				|| dataset.dataVersion() == null || dataset.dataVersion() < 1 || dataset.retrievedAt() == null
+				|| dataset.retrievedAt().isAfter(OffsetDateTime.now(ZoneOffset.UTC).plusMinutes(1))
+				|| !"INR".equals(dataset.currency()) || !request.periodStart().equals(dataset.periodStart())
+				|| !request.periodEndExclusive().equals(dataset.periodEndExclusive()) || dataset.months() == null
+				|| dataset.months().size() != 3) {
 
-            throw invalid();
-        }
+			throw invalid();
+		}
 
-        YearMonth first = YearMonth.from(request.periodStart());
+		YearMonth first = YearMonth.from(request.periodStart());
 
-        for (int index = 0; index < 3; index++) {
-            var month = dataset.months().get(index);
+		for (int index = 0; index < 3; index++) {
+			var month = dataset.months().get(index);
 
-            if (month == null
-                    || !first.plusMonths(index).toString().equals(
-                            month.month())) {
+			if (month == null || !first.plusMonths(index).toString().equals(month.month())) {
 
-                throw invalid();
-            }
+				throw invalid();
+			}
 
-            if ("AVAILABLE".equals(month.status())) {
-                if (month.orderCount() == null
-                        || month.returnedOrderCount() == null
-                        || month.orderCount() < 0
-                        || month.returnedOrderCount() < 0
-                        || month.returnedOrderCount()
-                                > month.orderCount()
-                        || new BigDecimal(month.returnsAmount())
-                                .compareTo(new BigDecimal(
-                                        month.grossSalesAmount())) > 0) {
+			if ("AVAILABLE".equals(month.status())) {
+				if (month.orderCount() == null || month.returnedOrderCount() == null || month.orderCount() < 0
+						|| month.returnedOrderCount() < 0 || month.returnedOrderCount() > month.orderCount()
+						|| new BigDecimal(month.returnsAmount())
+								.compareTo(new BigDecimal(month.grossSalesAmount())) > 0) {
 
-                    throw invalid();
-                }
-            }
-        }
-    }
+					throw invalid();
+				}
+			}
+		}
+	}
 
-    private void requireMoney(JsonNode value) {
+	private void requireMoney(JsonNode value) {
 
-        if (!value.isTextual()
-                || !value.asText().matches(
-                        "(0|[1-9][0-9]{0,15})\\.[0-9]{2}")) {
+		if (!value.isTextual() || !value.asText().matches("(0|[1-9][0-9]{0,15})\\.[0-9]{2}")) {
 
-            throw invalid();
-        }
-    }
+			throw invalid();
+		}
+	}
 
-    private ResponseStatusException invalid() {
-        return new ResponseStatusException(
-                HttpStatus.BAD_GATEWAY,
-                "INVALID_FINANCIAL_PROVIDER_RESPONSE"
-        );
-    }
+	private ResponseStatusException invalid() {
+		return new ResponseStatusException(HttpStatus.BAD_GATEWAY, "INVALID_FINANCIAL_PROVIDER_RESPONSE");
+	}
 
-    private ResponseStatusException unavailable(String reason) {
-        return new ResponseStatusException(
-                HttpStatus.SERVICE_UNAVAILABLE,
-                reason
-        );
-    }
+	private ResponseStatusException unavailable(String reason) {
+		return new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, reason);
+	}
 }

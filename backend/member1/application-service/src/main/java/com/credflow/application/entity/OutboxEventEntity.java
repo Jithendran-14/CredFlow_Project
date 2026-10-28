@@ -15,152 +15,148 @@ import jakarta.persistence.Table;
 @Table(name = "CF_OUTBOX_EVENTS")
 public class OutboxEventEntity {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "OUTBOX_EVENT_ID", nullable = false, updatable = false)
-    private Long outboxEventId;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Column(name = "OUTBOX_EVENT_ID", nullable = false, updatable = false)
+	private Long outboxEventId;
 
-    @Column(name = "EVENT_ID", length = 36, nullable = false, unique = true)
-    private String eventId;
+	@Column(name = "EVENT_ID", length = 36, nullable = false, unique = true)
+	private String eventId;
 
-    @Column(name = "AGGREGATE_TYPE", length = 50, nullable = false)
-    private String aggregateType;
+	@Column(name = "AGGREGATE_TYPE", length = 50, nullable = false)
+	private String aggregateType;
 
-    @Column(name = "AGGREGATE_ID", length = 36, nullable = false)
-    private String aggregateId;
+	@Column(name = "AGGREGATE_ID", length = 36, nullable = false)
+	private String aggregateId;
 
-    @Column(name = "EVENT_TYPE", length = 100, nullable = false)
-    private String eventType;
+	@Column(name = "EVENT_TYPE", length = 100, nullable = false)
+	private String eventType;
 
-    @Column(name = "EVENT_VERSION", nullable = false)
-    private Integer eventVersion = 1;
+	@Column(name = "EVENT_VERSION", nullable = false)
+	private Integer eventVersion = 1;
 
-    @Lob
-    @Column(name = "EVENT_PAYLOAD", nullable = false, columnDefinition = "CLOB")
-    private String eventPayload;
+	@Lob
+	@Column(name = "EVENT_PAYLOAD", nullable = false, columnDefinition = "CLOB")
+	private String eventPayload;
 
-    @Column(name = "EVENT_STATUS", length = 20, nullable = false)
-    private String eventStatus = "PENDING";
+	@Column(name = "EVENT_STATUS", length = 20, nullable = false)
+	private String eventStatus = "PENDING";
 
-    @Column(name = "RETRY_COUNT", nullable = false)
-    private Integer retryCount = 0;
+	@Column(name = "RETRY_COUNT", nullable = false)
+	private Integer retryCount = 0;
 
-    @Column(name = "NEXT_ATTEMPT_AT")
-    private OffsetDateTime nextAttemptAt;
+	@Column(name = "NEXT_ATTEMPT_AT")
+	private OffsetDateTime nextAttemptAt;
 
-    @Column(name = "CREATED_AT", nullable = false,
-            insertable = false, updatable = false)
-    private OffsetDateTime createdAt;
+	@Column(name = "CREATED_AT", nullable = false, insertable = false, updatable = false)
+	private OffsetDateTime createdAt;
 
-    @Column(name = "PUBLISHED_AT")
-    private OffsetDateTime publishedAt;
+	@Column(name = "PUBLISHED_AT")
+	private OffsetDateTime publishedAt;
 
-    @Column(name = "CLAIM_TOKEN", length = 36)
-    private String claimToken;
+	@Column(name = "CLAIM_TOKEN", length = 36)
+	private String claimToken;
 
-    @Column(name = "CLAIMED_AT")
-    private OffsetDateTime claimedAt;
+	@Column(name = "CLAIMED_AT")
+	private OffsetDateTime claimedAt;
 
-    @Column(name = "LEASE_EXPIRES_AT")
-    private OffsetDateTime leaseExpiresAt;
-    protected OutboxEventEntity() {
-        // Required by JPA.
-    }
+	@Column(name = "LEASE_EXPIRES_AT")
+	private OffsetDateTime leaseExpiresAt;
 
-    public static OutboxEventEntity pending(
-            String eventId,
-            String aggregateType,
-            String aggregateId,
-            String eventType,
-            int eventVersion,
-            String eventPayload) {
+	protected OutboxEventEntity() {
+		// Required by JPA.
+	}
 
-        OutboxEventEntity event = new OutboxEventEntity();
+	public static OutboxEventEntity pending(String eventId, String aggregateType, String aggregateId, String eventType,
+			int eventVersion, String eventPayload) {
 
-        event.eventId = eventId;
-        event.aggregateType = aggregateType;
-        event.aggregateId = aggregateId;
-        event.eventType = eventType;
-        event.eventVersion = eventVersion;
-        event.eventPayload = eventPayload;
-        event.eventStatus = "PENDING";
-        event.retryCount = 0;
+		OutboxEventEntity event = new OutboxEventEntity();
 
-        return event;
-    }
+		event.eventId = eventId;
+		event.aggregateType = aggregateType;
+		event.aggregateId = aggregateId;
+		event.eventType = eventType;
+		event.eventVersion = eventVersion;
+		event.eventPayload = eventPayload;
+		event.eventStatus = "PENDING";
+		event.retryCount = 0;
 
-    public Long getOutboxEventId() {
-        return outboxEventId;
-    }
+		return event;
+	}
 
-    public String getEventId() {
-        return eventId;
-    }
+	public Long getOutboxEventId() {
+		return outboxEventId;
+	}
 
-    public String getAggregateType() {
-        return aggregateType;
-    }
+	public String getEventId() {
+		return eventId;
+	}
 
-    public String getAggregateId() {
-        return aggregateId;
-    }
+	public String getAggregateType() {
+		return aggregateType;
+	}
 
-    public String getEventType() {
-        return eventType;
-    }
+	public String getAggregateId() {
+		return aggregateId;
+	}
 
-    public Integer getEventVersion() {
-        return eventVersion;
-    }
+	public String getEventType() {
+		return eventType;
+	}
 
-    public String getEventPayload() {
-        return eventPayload;
-    }
+	public Integer getEventVersion() {
+		return eventVersion;
+	}
 
-    public String getEventStatus() {
-        return eventStatus;
-    }
+	public String getEventPayload() {
+		return eventPayload;
+	}
 
-    public Integer getRetryCount() {
-        return retryCount;
-    }
+	public String getEventStatus() {
+		return eventStatus;
+	}
 
-    public OffsetDateTime getNextAttemptAt() {
-        return nextAttemptAt;
-    }
+	public Integer getRetryCount() {
+		return retryCount;
+	}
 
-    public OffsetDateTime getCreatedAt() {
-        return createdAt;
-    }
+	public OffsetDateTime getNextAttemptAt() {
+		return nextAttemptAt;
+	}
 
-    public OffsetDateTime getPublishedAt() {
-        return publishedAt;
-    }
+	public OffsetDateTime getCreatedAt() {
+		return createdAt;
+	}
 
-    public void markProcessing() {
-        this.eventStatus = "PROCESSING";
-    }
+	public OffsetDateTime getPublishedAt() {
+		return publishedAt;
+	}
 
-    public void markPublished() {
-        this.eventStatus = "PUBLISHED";
-        this.publishedAt = OffsetDateTime.now();
-        this.nextAttemptAt = null;
-    }
+	public void markProcessing() {
+		this.eventStatus = "PROCESSING";
+	}
 
-    public void markFailed(OffsetDateTime nextAttemptAt) {
-        this.eventStatus = "FAILED";
-        this.retryCount++;
-        this.nextAttemptAt = nextAttemptAt;
-    }
-    public String getClaimToken() {
-        return claimToken;
-    }
+	public void markPublished() {
+		this.eventStatus = "PUBLISHED";
+		this.publishedAt = OffsetDateTime.now();
+		this.nextAttemptAt = null;
+	}
 
-    public OffsetDateTime getClaimedAt() {
-        return claimedAt;
-    }
+	public void markFailed(OffsetDateTime nextAttemptAt) {
+		this.eventStatus = "FAILED";
+		this.retryCount++;
+		this.nextAttemptAt = nextAttemptAt;
+	}
 
-    public OffsetDateTime getLeaseExpiresAt() {
-        return leaseExpiresAt;
-    }
+	public String getClaimToken() {
+		return claimToken;
+	}
+
+	public OffsetDateTime getClaimedAt() {
+		return claimedAt;
+	}
+
+	public OffsetDateTime getLeaseExpiresAt() {
+		return leaseExpiresAt;
+	}
 }

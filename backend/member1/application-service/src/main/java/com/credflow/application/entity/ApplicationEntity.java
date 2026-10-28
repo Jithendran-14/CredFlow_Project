@@ -19,262 +19,263 @@ import jakarta.persistence.Version;
 @Table(name = "CF_APPLICATIONS")
 public class ApplicationEntity {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "APPLICATION_ID", nullable = false, updatable = false)
-    private Long applicationId;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Column(name = "APPLICATION_ID", nullable = false, updatable = false)
+	private Long applicationId;
 
-    @Column(name = "PUBLIC_APPLICATION_ID",
-            length = 36, nullable = false, updatable = false, unique = true)
-    private String publicApplicationId;
+	@Column(name = "PUBLIC_APPLICATION_ID", length = 36, nullable = false, updatable = false, unique = true)
+	private String publicApplicationId;
 
-    @Column(name = "APPLICATION_REFERENCE",
-            length = 40, nullable = false, unique = true)
-    private String applicationReference;
+	@Column(name = "APPLICATION_REFERENCE", length = 40, nullable = false, unique = true)
+	private String applicationReference;
 
-    @Column(name = "MARKETPLACE_ID", length = 36, nullable = false)
-    private String marketplaceId;
+	@Column(name = "MARKETPLACE_ID", length = 36, nullable = false)
+	private String marketplaceId;
 
-    @Column(name = "MARKETPLACE_SELLER_ID",
-            length = 100, nullable = false)
-    private String marketplaceSellerId;
+	@Column(name = "MARKETPLACE_SELLER_ID", length = 100, nullable = false)
+	private String marketplaceSellerId;
 
-    @Column(name = "MARKETPLACE_REQUEST_ID",
-            length = 100, nullable = false)
-    private String marketplaceRequestId;
+	@Column(name = "MARKETPLACE_REQUEST_ID", length = 100, nullable = false)
+	private String marketplaceRequestId;
 
-    @Column(name = "SELLER_ID", length = 100)
-    private String sellerId;
-    
-    @Column(name = "SELLER_REQUEST_REFERENCE",
-            length = 100, nullable = false)
-    private String sellerRequestReference;
+	@Column(name = "SELLER_ID", length = 100)
+	private String sellerId;
 
-    @Column(name = "REQUESTED_AMOUNT",
-            precision = 19, scale = 2, nullable = false)
-    private BigDecimal requestedAmount;
+	@Column(name = "SELLER_REQUEST_REFERENCE", length = 100, nullable = false)
+	private String sellerRequestReference;
 
-    @Column(name = "CURRENCY", length = 3, nullable = false)
-    private String currency = "INR";
+	@Column(name = "REQUESTED_AMOUNT", precision = 19, scale = 2, nullable = false)
+	private BigDecimal requestedAmount;
 
-    @Column(name = "LOAN_PURPOSE", length = 30, nullable = false)
-    private String loanPurpose;
+	@Column(name = "CURRENCY", length = 3, nullable = false)
+	private String currency = "INR";
 
-    @Column(name = "DISPLAY_NAME", length = 100, nullable = false)
-    private String displayName;
+	@Column(name = "LOAN_PURPOSE", length = 30, nullable = false)
+	private String loanPurpose;
 
-    @Column(name = "BUSINESS_NAME", length = 200, nullable = false)
-    private String businessName;
+	@Column(name = "DISPLAY_NAME", length = 100, nullable = false)
+	private String displayName;
 
-    @Column(name = "BUSINESS_START_DATE", nullable = false)
-    private LocalDate businessStartDate;
+	@Column(name = "BUSINESS_NAME", length = 200, nullable = false)
+	private String businessName;
 
-    @Column(name = "STATUS", length = 30, nullable = false)
-    private String status = "DRAFT";
+	@Column(name = "BUSINESS_START_DATE", nullable = false)
+	private LocalDate businessStartDate;
 
-    @Column(name = "APPLICATION_REVISION", nullable = false)
-    private Integer applicationRevision = 1;
+	@Column(name = "STATUS", length = 30, nullable = false)
+	private String status = "DRAFT";
 
-    @Version
-    @Column(name = "VERSION", nullable = false)
-    private Integer version;
+	@Column(name = "APPLICATION_REVISION", nullable = false)
+	private Integer applicationRevision = 1;
 
-    @Column(name = "WORKFLOW_VERSION", nullable = false)
-    private Integer workflowVersion = 0;
+	@Version
+	@Column(name = "VERSION", nullable = false)
+	private Integer version;
 
-    @Column(name = "CREATED_AT", nullable = false)
-    private OffsetDateTime createdAt;
+	@Column(name = "WORKFLOW_VERSION", nullable = false)
+	private Integer workflowVersion = 0;
 
-    @Column(name = "UPDATED_AT", nullable = false)
-    private OffsetDateTime updatedAt;
+	@Column(name = "CREATED_AT", nullable = false)
+	private OffsetDateTime createdAt;
 
-    @jakarta.persistence.Lob
-    @Column(name="PHASE0_JSON")
-    private String phase0Json;
-    public String getPhase0Json(){return phase0Json;}
-    public void setPhase0Json(String value){phase0Json=value;}
+	@Column(name = "UPDATED_AT", nullable = false)
+	private OffsetDateTime updatedAt;
 
-    public ApplicationEntity() {
-        // Required by JPA.
-    }
-    @PrePersist
-    protected void onCreate() {
-        OffsetDateTime now = OffsetDateTime.now();
+	@jakarta.persistence.Lob
+	@Column(name = "PHASE0_JSON")
+	private String phase0Json;
 
-        createdAt = now;
-        updatedAt = now;
+	public String getPhase0Json() {
+		return phase0Json;
+	}
 
-        if (currency == null) {
-            currency = "INR";
-        }
+	public void setPhase0Json(String value) {
+		phase0Json = value;
+	}
 
-        if (status == null) {
-            status = "DRAFT";
-        }
+	public ApplicationEntity() {
+		// Required by JPA.
+	}
 
-        if (applicationRevision == null) {
-            applicationRevision = 1;
-        }
+	@PrePersist
+	protected void onCreate() {
+		OffsetDateTime now = OffsetDateTime.now();
 
-        if (workflowVersion == null) {
-            workflowVersion = 0;
-        }
-    }
+		createdAt = now;
+		updatedAt = now;
 
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = OffsetDateTime.now();
-    }
+		if (currency == null) {
+			currency = "INR";
+		}
 
-    public Long getApplicationId() {
-        return applicationId;
-    }
+		if (status == null) {
+			status = "DRAFT";
+		}
 
-    public String getPublicApplicationId() {
-        return publicApplicationId;
-    }
+		if (applicationRevision == null) {
+			applicationRevision = 1;
+		}
 
-    public void assignPublicApplicationId(String publicApplicationId) {
-        if (this.publicApplicationId != null) {
-            throw new IllegalStateException(
-                    "Public application ID has already been assigned");
-        }
+		if (workflowVersion == null) {
+			workflowVersion = 0;
+		}
+	}
 
-        if (publicApplicationId == null || publicApplicationId.isBlank()) {
-            throw new IllegalArgumentException(
-                    "Public application ID cannot be blank");
-        }
+	@PreUpdate
+	protected void onUpdate() {
+		updatedAt = OffsetDateTime.now();
+	}
 
-        this.publicApplicationId = publicApplicationId;
-    }
+	public Long getApplicationId() {
+		return applicationId;
+	}
 
-    public String getApplicationReference() {
-        return applicationReference;
-    }
+	public String getPublicApplicationId() {
+		return publicApplicationId;
+	}
 
-    public void setApplicationReference(String applicationReference) {
-        this.applicationReference = applicationReference;
-    }
+	public void assignPublicApplicationId(String publicApplicationId) {
+		if (this.publicApplicationId != null) {
+			throw new IllegalStateException("Public application ID has already been assigned");
+		}
 
-    public String getMarketplaceId() {
-        return marketplaceId;
-    }
+		if (publicApplicationId == null || publicApplicationId.isBlank()) {
+			throw new IllegalArgumentException("Public application ID cannot be blank");
+		}
 
-    public void setMarketplaceId(String marketplaceId) {
-        this.marketplaceId = marketplaceId;
-    }
+		this.publicApplicationId = publicApplicationId;
+	}
 
-    public String getMarketplaceSellerId() {
-        return marketplaceSellerId;
-    }
+	public String getApplicationReference() {
+		return applicationReference;
+	}
 
-    public void setMarketplaceSellerId(String marketplaceSellerId) {
-        this.marketplaceSellerId = marketplaceSellerId;
-    }
-    public String getSellerId() {
-        return sellerId;
-    }
+	public void setApplicationReference(String applicationReference) {
+		this.applicationReference = applicationReference;
+	}
 
-    public void setSellerId(String sellerId) {
-        this.sellerId = sellerId;
-    }
-    public String getMarketplaceRequestId() {
-        return marketplaceRequestId;
-    }
+	public String getMarketplaceId() {
+		return marketplaceId;
+	}
 
-    public void setMarketplaceRequestId(String marketplaceRequestId) {
-        this.marketplaceRequestId = marketplaceRequestId;
-    }
+	public void setMarketplaceId(String marketplaceId) {
+		this.marketplaceId = marketplaceId;
+	}
 
-    public String getSellerRequestReference() {
-        return sellerRequestReference;
-    }
+	public String getMarketplaceSellerId() {
+		return marketplaceSellerId;
+	}
 
-    public void setSellerRequestReference(String sellerRequestReference) {
-        this.sellerRequestReference = sellerRequestReference;
-    }
+	public void setMarketplaceSellerId(String marketplaceSellerId) {
+		this.marketplaceSellerId = marketplaceSellerId;
+	}
 
-    public BigDecimal getRequestedAmount() {
-        return requestedAmount;
-    }
+	public String getSellerId() {
+		return sellerId;
+	}
 
-    public void setRequestedAmount(BigDecimal requestedAmount) {
-        this.requestedAmount = requestedAmount;
-    }
+	public void setSellerId(String sellerId) {
+		this.sellerId = sellerId;
+	}
 
-    public String getCurrency() {
-        return currency;
-    }
+	public String getMarketplaceRequestId() {
+		return marketplaceRequestId;
+	}
 
-    public void setCurrency(String currency) {
-        this.currency = currency;
-    }
+	public void setMarketplaceRequestId(String marketplaceRequestId) {
+		this.marketplaceRequestId = marketplaceRequestId;
+	}
 
-    public String getLoanPurpose() {
-        return loanPurpose;
-    }
+	public String getSellerRequestReference() {
+		return sellerRequestReference;
+	}
 
-    public void setLoanPurpose(String loanPurpose) {
-        this.loanPurpose = loanPurpose;
-    }
+	public void setSellerRequestReference(String sellerRequestReference) {
+		this.sellerRequestReference = sellerRequestReference;
+	}
 
-    public String getDisplayName() {
-        return displayName;
-    }
+	public BigDecimal getRequestedAmount() {
+		return requestedAmount;
+	}
 
-    public void setDisplayName(String displayName) {
-        this.displayName = displayName;
-    }
+	public void setRequestedAmount(BigDecimal requestedAmount) {
+		this.requestedAmount = requestedAmount;
+	}
 
-    public String getBusinessName() {
-        return businessName;
-    }
+	public String getCurrency() {
+		return currency;
+	}
 
-    public void setBusinessName(String businessName) {
-        this.businessName = businessName;
-    }
+	public void setCurrency(String currency) {
+		this.currency = currency;
+	}
 
-    public LocalDate getBusinessStartDate() {
-        return businessStartDate;
-    }
+	public String getLoanPurpose() {
+		return loanPurpose;
+	}
 
-    public void setBusinessStartDate(LocalDate businessStartDate) {
-        this.businessStartDate = businessStartDate;
-    }
+	public void setLoanPurpose(String loanPurpose) {
+		this.loanPurpose = loanPurpose;
+	}
 
-    public String getStatus() {
-        return status;
-    }
+	public String getDisplayName() {
+		return displayName;
+	}
 
-    public void setStatus(String status) {
-        this.status = status;
-    }
+	public void setDisplayName(String displayName) {
+		this.displayName = displayName;
+	}
 
-    public Integer getApplicationRevision() {
-        return applicationRevision;
-    }
+	public String getBusinessName() {
+		return businessName;
+	}
 
-    public void setApplicationRevision(Integer applicationRevision) {
-        this.applicationRevision = applicationRevision;
-    }
+	public void setBusinessName(String businessName) {
+		this.businessName = businessName;
+	}
 
-    public Integer getVersion() {
-        return version;
-    }
+	public LocalDate getBusinessStartDate() {
+		return businessStartDate;
+	}
 
-    public Integer getWorkflowVersion() {
-        return workflowVersion;
-    }
+	public void setBusinessStartDate(LocalDate businessStartDate) {
+		this.businessStartDate = businessStartDate;
+	}
 
-    public void setWorkflowVersion(Integer workflowVersion) {
-        this.workflowVersion = workflowVersion;
-    }
+	public String getStatus() {
+		return status;
+	}
 
-    public OffsetDateTime getCreatedAt() {
-        return createdAt;
-    }
+	public void setStatus(String status) {
+		this.status = status;
+	}
 
-    public OffsetDateTime getUpdatedAt() {
-        return updatedAt;
-    }
+	public Integer getApplicationRevision() {
+		return applicationRevision;
+	}
+
+	public void setApplicationRevision(Integer applicationRevision) {
+		this.applicationRevision = applicationRevision;
+	}
+
+	public Integer getVersion() {
+		return version;
+	}
+
+	public Integer getWorkflowVersion() {
+		return workflowVersion;
+	}
+
+	public void setWorkflowVersion(Integer workflowVersion) {
+		this.workflowVersion = workflowVersion;
+	}
+
+	public OffsetDateTime getCreatedAt() {
+		return createdAt;
+	}
+
+	public OffsetDateTime getUpdatedAt() {
+		return updatedAt;
+	}
 }

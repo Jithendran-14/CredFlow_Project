@@ -12,38 +12,21 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/internal/v1/security")
 public class SecurityCheckController {
 
-    @GetMapping("/check")
-    public SecurityCheckResponse check(
-            @AuthenticationPrincipal Jwt jwt) {
+	@GetMapping("/check")
+	public SecurityCheckResponse check(@AuthenticationPrincipal Jwt jwt) {
 
-        return new SecurityCheckResponse(
-                "consent-service",
-                jwt.getSubject(),
-                jwt.getClaimAsStringList("roles"),
-                jwt.getClaimAsString("client_id"),
-                jwt.getClaimAsString("scope")
-        );
-    }
+		return new SecurityCheckResponse("consent-service", jwt.getSubject(), jwt.getClaimAsStringList("roles"),
+				jwt.getClaimAsString("client_id"), jwt.getClaimAsString("scope"));
+	}
 
-    public record SecurityCheckResponse(
-            String service,
-            String subject,
-            List<String> roles,
-            String clientId,
-            String scope
-    ) {
-    }
-    
-    @GetMapping("/machine-check")
-    public SecurityCheckResponse checkMachine(
-            @AuthenticationPrincipal Jwt jwt) {
+	public record SecurityCheckResponse(String service, String subject, List<String> roles, String clientId,
+			String scope) {
+	}
 
-        return new SecurityCheckResponse(
-                "consent-service",
-                jwt.getSubject(),
-                jwt.getClaimAsStringList("roles"),
-                jwt.getClaimAsString("client_id"),
-                jwt.getClaimAsString("scope")
-        );
-    }
+	@GetMapping("/machine-check")
+	public SecurityCheckResponse checkMachine(@AuthenticationPrincipal Jwt jwt) {
+
+		return new SecurityCheckResponse("consent-service", jwt.getSubject(), jwt.getClaimAsStringList("roles"),
+				jwt.getClaimAsString("client_id"), jwt.getClaimAsString("scope"));
+	}
 }

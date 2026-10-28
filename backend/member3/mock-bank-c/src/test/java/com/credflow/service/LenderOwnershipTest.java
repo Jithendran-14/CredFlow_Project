@@ -14,33 +14,40 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 class LenderOwnershipTest {
-    @Test void aPeerBankRequestNeverReachesTheDatabase() {
-        var em=mock(EntityManager.class);var platform=mock(Platform.class);
-        var service=new BankCSimulatorService(new BankCSimulatorRepository(em),platform,"integration-service",
-            "bank-c","11111111-1111-4111-8111-111111111111","http://localhost:8087");
-        var error=assertThrows(ResponseStatusException.class,
-            ()->service.lookup("nbfc-b",UUID.randomUUID(),null));
-        assertEquals(404,error.getStatusCode().value());
-        verifyNoInteractions(em,platform);
-    }
+	@Test
+	void aPeerBankRequestNeverReachesTheDatabase() {
+		var em = mock(EntityManager.class);
+		var platform = mock(Platform.class);
+		var service = new BankCSimulatorService(new BankCSimulatorRepository(em), platform, "integration-service",
+				"bank-c", "11111111-1111-4111-8111-111111111111", "http://localhost:8087");
+		var error = assertThrows(ResponseStatusException.class,
+				() -> service.lookup("nbfc-b", UUID.randomUUID(), null));
+		assertEquals(404, error.getStatusCode().value());
+		verifyNoInteractions(em, platform);
+	}
 
-    @Test void incorrectBankIdentityFailsAtStartup() {
-        assertThrows(IllegalArgumentException.class,()->new BankCSimulatorService(
-            new BankCSimulatorRepository(mock(EntityManager.class)),mock(Platform.class),"integration-service",
-            "nbfc-b","11111111-1111-4111-8111-111111111111","http://localhost:8087"));
-    }
+	@Test
+	void incorrectBankIdentityFailsAtStartup() {
+		assertThrows(IllegalArgumentException.class,
+				() -> new BankCSimulatorService(new BankCSimulatorRepository(mock(EntityManager.class)),
+						mock(Platform.class), "integration-service", "nbfc-b", "11111111-1111-4111-8111-111111111111",
+						"http://localhost:8087"));
+	}
 
-    @Test @SuppressWarnings("unchecked") void callbackWorkerOnlyPollsTheOwningBank() {
-        var em=mock(EntityManager.class);var platform=mock(Platform.class);
-        when(platform.tx(any())).thenAnswer(i->((Supplier<?>)i.getArgument(0)).get());
-        TypedQuery<UUID> query=mock(TypedQuery.class);
-        when(em.createQuery(anyString(),eq(UUID.class))).thenReturn(query);
-        when(query.setParameter(anyString(),any())).thenReturn(query);
-        when(query.setMaxResults(anyInt())).thenReturn(query);
-        when(query.getResultList()).thenReturn(List.of());
-        new BankCSimulatorService(new BankCSimulatorRepository(em),platform,"integration-service",
-            "bank-c","11111111-1111-4111-8111-111111111111","http://localhost:8087").callbacks();
-        verify(query).setParameter("bank","bank-c");
-        verify(em,times(1)).createQuery(anyString(),eq(UUID.class));
-    }
+	@Test
+	@SuppressWarnings("unchecked")
+	void callbackWorkerOnlyPollsTheOwningBank() {
+		var em = mock(EntityManager.class);
+		var platform = mock(Platform.class);
+		when(platform.tx(any())).thenAnswer(i -> ((Supplier<?>) i.getArgument(0)).get());
+		TypedQuery<UUID> query = mock(TypedQuery.class);
+		when(em.createQuery(anyString(), eq(UUID.class))).thenReturn(query);
+		when(query.setParameter(anyString(), any())).thenReturn(query);
+		when(query.setMaxResults(anyInt())).thenReturn(query);
+		when(query.getResultList()).thenReturn(List.of());
+		new BankCSimulatorService(new BankCSimulatorRepository(em), platform, "integration-service", "bank-c",
+				"11111111-1111-4111-8111-111111111111", "http://localhost:8087").callbacks();
+		verify(query).setParameter("bank", "bank-c");
+		verify(em, times(1)).createQuery(anyString(), eq(UUID.class));
+	}
 }

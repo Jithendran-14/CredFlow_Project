@@ -23,36 +23,21 @@ import jakarta.validation.Valid;
 @RequestMapping("/api/v1/applications")
 public class FinancialConsentController {
 
-    private final FinancialConsentService service;
+	private final FinancialConsentService service;
 
-    public FinancialConsentController(
-            FinancialConsentService service) {
+	public FinancialConsentController(FinancialConsentService service) {
 
-        this.service = service;
-    }
+		this.service = service;
+	}
 
-    @PostMapping("/{applicationId}/financial-consents")
-    public ResponseEntity<FinancialConsentResponse> grant(
-            @PathVariable("applicationId") UUID applicationId,
-            @Valid @RequestBody FinancialConsentRequest request,
-            @RequestHeader(
-                    value = "Idempotency-Key",
-                    required = false
-            ) String idempotencyKey,
-            @RequestHeader(
-                    value = "X-Correlation-ID",
-                    required = false
-            ) String correlationId,
-            @AuthenticationPrincipal Jwt jwt) {
+	@PostMapping("/{applicationId}/financial-consents")
+	public ResponseEntity<FinancialConsentResponse> grant(@PathVariable("applicationId") UUID applicationId,
+			@Valid @RequestBody FinancialConsentRequest request,
+			@RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey,
+			@RequestHeader(value = "X-Correlation-ID", required = false) String correlationId,
+			@AuthenticationPrincipal Jwt jwt) {
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(
-                service.grant(
-                        applicationId,
-                        request,
-                        idempotencyKey,
-                        correlationId,
-                        jwt
-                )
-        );
-    }
+		return ResponseEntity.status(HttpStatus.CREATED)
+				.body(service.grant(applicationId, request, idempotencyKey, correlationId, jwt));
+	}
 }

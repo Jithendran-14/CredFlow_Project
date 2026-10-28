@@ -13,52 +13,41 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 public class BankAController implements BankAApi {
 
-    private final BankASimulatorService service;
+	private final BankASimulatorService service;
 
-    public BankAController(BankASimulatorService service) {
-        this.service = service;
-    }
+	public BankAController(BankASimulatorService service) {
+		this.service = service;
+	}
 
-    @Override
-    public Object submit(String bank, JsonNode wire, Jwt jwt, String correlation) {
-        return service.submit(bank, wire, jwt, correlation);
-    }
+	@Override
+	public Object submit(String bank, JsonNode wire, Jwt jwt, String correlation) {
+		return service.submit(bank, wire, jwt, correlation);
+	}
 
-    @Override
-    public Object lookup(String bank, UUID reference, Jwt jwt) {
-        return service.lookup(bank, reference, jwt);
-    }
+	@Override
+	public Object lookup(String bank, UUID reference, Jwt jwt) {
+		return service.lookup(bank, reference, jwt);
+	}
 
-    @Override
-    public Map<String, Object> cancelReference(
-        String bank,
-        UUID reference,
-        JsonNode body,
-        Jwt jwt,
-        String correlation
-    ) {
-        return service.cancelReference(bank, reference, body, jwt, correlation);
-    }
+	@Override
+	public Map<String, Object> cancelReference(String bank, UUID reference, JsonNode body, Jwt jwt,
+			String correlation) {
+		return service.cancelReference(bank, reference, body, jwt, correlation);
+	}
 
-    @Override
-    public JsonNode details(String bank, String externalId, Jwt jwt) {
-        return service.details(bank, externalId, jwt);
-    }
+	@Override
+	public JsonNode details(String bank, String externalId, Jwt jwt) {
+		return service.details(bank, externalId, jwt);
+	}
 
-    @Override
-    public Map<String, String> command(
-        String bank,
-        String externalId,
-        UUID commandId,
-        JsonNode body,
-        Jwt jwt,
-        String correlation
-    ) {
-        return service.command(bank, externalId, commandId, body, jwt, correlation);
-    }
+	@Override
+	public Map<String, String> command(String bank, String externalId, UUID commandId, JsonNode body, Jwt jwt,
+			String correlation) {
+		return service.command(bank, externalId, commandId, body, jwt, correlation);
+	}
 
-    @Override
-    public Map<String, String> replay(String bank, UUID eventId, Jwt jwt) {
-        return service.replay(bank, eventId, jwt);
-    }
+	@Override
+	public Map<String, String> replay(String bank, UUID eventId, Jwt jwt) {
+		return service.replay(bank, eventId, jwt);
+	}
 }

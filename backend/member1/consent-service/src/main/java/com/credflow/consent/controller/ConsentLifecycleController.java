@@ -19,60 +19,29 @@ import jakarta.validation.Valid;
 @RequestMapping("/api/v1/applications")
 public class ConsentLifecycleController {
 
-    private final ConsentLifecycleService service;
+	private final ConsentLifecycleService service;
 
-    public ConsentLifecycleController(
-            ConsentLifecycleService service) {
-        this.service = service;
-    }
+	public ConsentLifecycleController(ConsentLifecycleService service) {
+		this.service = service;
+	}
 
-    @PutMapping("/{applicationId}/consents")
-    public ResponseEntity<ConsentDecisionResponse> update(
-            @PathVariable("applicationId") UUID applicationId,
-            @Valid @RequestBody ConsentDecisionRequest request,
-            @RequestHeader(
-                    value = "Idempotency-Key",
-                    required = false
-            ) String key,
-            @RequestHeader(
-                    value = "X-Correlation-ID",
-                    required = false
-            ) String correlation,
-            @AuthenticationPrincipal Jwt jwt) {
+	@PutMapping("/{applicationId}/consents")
+	public ResponseEntity<ConsentDecisionResponse> update(@PathVariable("applicationId") UUID applicationId,
+			@Valid @RequestBody ConsentDecisionRequest request,
+			@RequestHeader(value = "Idempotency-Key", required = false) String key,
+			@RequestHeader(value = "X-Correlation-ID", required = false) String correlation,
+			@AuthenticationPrincipal Jwt jwt) {
 
-        return ResponseEntity.accepted().body(
-                service.update(
-                        applicationId,
-                        request,
-                        key,
-                        correlation,
-                        jwt
-                )
-        );
-    }
+		return ResponseEntity.accepted().body(service.update(applicationId, request, key, correlation, jwt));
+	}
 
-    @PostMapping("/{applicationId}/financial-consents/revoke")
-    public ResponseEntity<FinancialWithdrawalResponse> withdraw(
-            @PathVariable("applicationId") UUID applicationId,
-            @Valid @RequestBody FinancialWithdrawalRequest request,
-            @RequestHeader(
-                    value = "Idempotency-Key",
-                    required = false
-            ) String key,
-            @RequestHeader(
-                    value = "X-Correlation-ID",
-                    required = false
-            ) String correlation,
-            @AuthenticationPrincipal Jwt jwt) {
+	@PostMapping("/{applicationId}/financial-consents/revoke")
+	public ResponseEntity<FinancialWithdrawalResponse> withdraw(@PathVariable("applicationId") UUID applicationId,
+			@Valid @RequestBody FinancialWithdrawalRequest request,
+			@RequestHeader(value = "Idempotency-Key", required = false) String key,
+			@RequestHeader(value = "X-Correlation-ID", required = false) String correlation,
+			@AuthenticationPrincipal Jwt jwt) {
 
-        return ResponseEntity.ok(
-                service.withdraw(
-                        applicationId,
-                        request,
-                        key,
-                        correlation,
-                        jwt
-                )
-        );
-    }
+		return ResponseEntity.ok(service.withdraw(applicationId, request, key, correlation, jwt));
+	}
 }

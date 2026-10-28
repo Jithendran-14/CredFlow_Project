@@ -22,148 +22,115 @@ import com.credflow.auth.repository.AuthUserRepository;
 class AuthServiceTest {
 	@AfterEach
 	void tearDown() throws Exception {
-	    mocks.close();
+		mocks.close();
 	}
 
-    @Mock
-    private AuthUserRepository repository;
+	@Mock
+	private AuthUserRepository repository;
 
-    @Mock
-    private PasswordEncoder passwordEncoder;
+	@Mock
+	private PasswordEncoder passwordEncoder;
 
-    @Mock
-    private JwtService jwtService;
+	@Mock
+	private JwtService jwtService;
 
-    private AuthService authService;
+	private AuthService authService;
 
-    private AutoCloseable mocks;
+	private AutoCloseable mocks;
 
-    @BeforeEach
-    void setUp() {
-        mocks = MockitoAnnotations.openMocks(this);
+	@BeforeEach
+	void setUp() {
+		mocks = MockitoAnnotations.openMocks(this);
 
-        authService = new AuthService(
-                repository,
-                passwordEncoder,
-                jwtService
-        );
-    }
+		authService = new AuthService(repository, passwordEncoder, jwtService);
+	}
 
-    @Test
-    void activeUserWithCorrectPasswordShouldLogin() {
+	@Test
+	void activeUserWithCorrectPasswordShouldLogin() {
 
-        AuthUser user = createUser("ACTIVE");
+		AuthUser user = createUser("ACTIVE");
 
-        when(repository.findByUsernameIgnoreCase("seller1001"))
-                .thenReturn(Optional.of(user));
+		when(repository.findByUsernameIgnoreCase("seller1001")).thenReturn(Optional.of(user));
 
-        when(passwordEncoder.matches("correct-password", "stored-hash"))
-                .thenReturn(true);
+		when(passwordEncoder.matches("correct-password", "stored-hash")).thenReturn(true);
 
-        when(jwtService.generateToken(user))
-                .thenReturn("test-jwt");
+		when(jwtService.generateToken(user)).thenReturn("test-jwt");
 
-        when(jwtService.getExpirySeconds())
-                .thenReturn(900L);
+		when(jwtService.getExpirySeconds()).thenReturn(900L);
 
-        LoginResponse response = authService.login(
-                new LoginRequest("seller1001", "correct-password")
-        );
+		LoginResponse response = authService.login(new LoginRequest("seller1001", "correct-password"));
 
-        assertEquals("test-jwt", response.accessToken());
+		assertEquals("test-jwt", response.accessToken());
 
-        verify(jwtService).generateToken(user);
-    }
+		verify(jwtService).generateToken(user);
+	}
 
-    @Test
-    void incorrectPasswordShouldBeRejected() {
+	@Test
+	void incorrectPasswordShouldBeRejected() {
 
-        AuthUser user = createUser("ACTIVE");
+		AuthUser user = createUser("ACTIVE");
 
-        when(repository.findByUsernameIgnoreCase("seller1001"))
-                .thenReturn(Optional.of(user));
+		when(repository.findByUsernameIgnoreCase("seller1001")).thenReturn(Optional.of(user));
 
-        when(passwordEncoder.matches("wrong-password", "stored-hash"))
-                .thenReturn(false);
+		when(passwordEncoder.matches("wrong-password", "stored-hash")).thenReturn(false);
 
-        assertThrows(
-                InvalidCredentialsException.class,
-                () -> authService.login(
-                        new LoginRequest("seller1001", "wrong-password")
-                )
-        );
+		assertThrows(InvalidCredentialsException.class,
+				() -> authService.login(new LoginRequest("seller1001", "wrong-password")));
 
-        verify(jwtService, never()).generateToken(any());
-    }
+		verify(jwtService, never()).generateToken(any());
+	}
 
-    @Test
-    void unknownUsernameShouldBeRejected() {
+	@Test
+	void unknownUsernameShouldBeRejected() {
 
-        when(repository.findByUsernameIgnoreCase("unknown"))
-                .thenReturn(Optional.empty());
+		when(repository.findByUsernameIgnoreCase("unknown")).thenReturn(Optional.empty());
 
-        assertThrows(
-                InvalidCredentialsException.class,
-                () -> authService.login(
-                        new LoginRequest("unknown", "password")
-                )
-        );
+		assertThrows(InvalidCredentialsException.class,
+				() -> authService.login(new LoginRequest("unknown", "password")));
 
-        verify(jwtService, never()).generateToken(any());
-    }
+		verify(jwtService, never()).generateToken(any());
+	}
 
-    @Test
-    void lockedAccountShouldBeRejected() {
+	@Test
+	void lockedAccountShouldBeRejected() {
 
-        AuthUser user = createUser("LOCKED");
+		AuthUser user = createUser("LOCKED");
 
-        when(repository.findByUsernameIgnoreCase("seller1001"))
-                .thenReturn(Optional.of(user));
+		when(repository.findByUsernameIgnoreCase("seller1001")).thenReturn(Optional.of(user));
 
-        when(passwordEncoder.matches("correct-password", "stored-hash"))
-                .thenReturn(true);
+		when(passwordEncoder.matches("correct-password", "stored-hash")).thenReturn(true);
 
-        assertThrows(
-                InvalidCredentialsException.class,
-                () -> authService.login(
-                        new LoginRequest("seller1001", "correct-password")
-                )
-        );
+		assertThrows(InvalidCredentialsException.class,
+				() -> authService.login(new LoginRequest("seller1001", "correct-password")));
 
-        verify(jwtService, never()).generateToken(any());
-    }
+		verify(jwtService, never()).generateToken(any());
+	}
 
-    @Test
-    void disabledAccountShouldBeRejected() {
+	@Test
+	void disabledAccountShouldBeRejected() {
 
-        AuthUser user = createUser("DISABLED");
+		AuthUser user = createUser("DISABLED");
 
-        when(repository.findByUsernameIgnoreCase("seller1001"))
-                .thenReturn(Optional.of(user));
+		when(repository.findByUsernameIgnoreCase("seller1001")).thenReturn(Optional.of(user));
 
-        when(passwordEncoder.matches("correct-password", "stored-hash"))
-                .thenReturn(true);
+		when(passwordEncoder.matches("correct-password", "stored-hash")).thenReturn(true);
 
-        assertThrows(
-                InvalidCredentialsException.class,
-                () -> authService.login(
-                        new LoginRequest("seller1001", "correct-password")
-                )
-        );
+		assertThrows(InvalidCredentialsException.class,
+				() -> authService.login(new LoginRequest("seller1001", "correct-password")));
 
-        verify(jwtService, never()).generateToken(any());
-    }
+		verify(jwtService, never()).generateToken(any());
+	}
 
-    private AuthUser createUser(String status) {
+	private AuthUser createUser(String status) {
 
-        AuthUser user = new AuthUser();
+		AuthUser user = new AuthUser();
 
-        user.setUsername("seller1001");
-        user.setPasswordHash("stored-hash");
-        user.setUserRole("SELLER");
-        user.setSellerId("SELLER-1001");
-        user.setAccountStatus(status);
+		user.setUsername("seller1001");
+		user.setPasswordHash("stored-hash");
+		user.setUserRole("SELLER");
+		user.setSellerId("SELLER-1001");
+		user.setAccountStatus(status);
 
-        return user;
-    }
+		return user;
+	}
 }

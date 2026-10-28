@@ -13,17 +13,15 @@ import com.credflow.auth.service.AuthService;
 @RequestMapping("/api/v1/auth")
 public class AuthController {
 
-    private final AuthService authService;
+	private final AuthService authService;
 
-    public AuthController(AuthService authService) {
-        this.authService = authService;
-    }
+	public AuthController(AuthService authService) {
+		this.authService = authService;
+	}
 
-    @PostMapping("/login")
-    public ResponseEntity<LoginResponse> login(
-            @Valid @RequestBody LoginRequest request) {
+	@PostMapping("/login")
+	public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
 
-        return ResponseEntity.ok(authService.login(request));
-    }
+		return ResponseEntity.ok(authService.login(request));
+	}
 }
-

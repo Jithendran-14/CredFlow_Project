@@ -10,7 +10,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EntityScan(basePackages = { "com.credflow.entity", "com.credflow.platform.entity" })
 public class OrchestrationServiceApplication {
 
-    public static void main(String[] args) {
-        SpringApplication.run(OrchestrationServiceApplication.class, args);
-    }
+	public static void main(String[] args) {
+		SpringApplication.run(OrchestrationServiceApplication.class, args);
+	}
 }

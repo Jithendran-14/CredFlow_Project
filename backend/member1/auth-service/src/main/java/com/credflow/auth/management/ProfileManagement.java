@@ -1,13 +1,92 @@
 package com.credflow.auth.management;
-import java.util.*;import jakarta.validation.Valid;import jakarta.validation.constraints.*;
-import org.springframework.jdbc.core.JdbcTemplate;import org.springframework.stereotype.Service;import org.springframework.transaction.annotation.Transactional;import org.springframework.web.server.ResponseStatusException;import org.springframework.security.oauth2.jwt.Jwt;import static org.springframework.http.HttpStatus.*;
-@Service @Transactional
+
+import java.util.*;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.*;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.security.oauth2.jwt.Jwt;
+import static org.springframework.http.HttpStatus.*;
+
+@Service
+@Transactional
 public class ProfileManagement {
- private final JdbcTemplate jdbc;public ProfileManagement(JdbcTemplate jdbc){this.jdbc=jdbc;}
- private void human(Jwt jwt,String... roles){var r=jwt==null?null:jwt.getClaimAsStringList("roles");if(r==null||Collections.disjoint(r,List.of(roles))||jwt.getClaimAsString("client_id")!=null)throw new ResponseStatusException(FORBIDDEN,"Your own human account is required.");}
- public void seller(SellerProfileInput input,Jwt jwt){human(jwt,"SELLER");String id=jwt.getClaimAsString("sellerId");var rows=jdbc.queryForList("SELECT P.USER_ID,P.ROW_VERSION FROM CF_SELLER_PROFILES P JOIN CF_AUTH_USERS U ON U.USER_ID=P.USER_ID WHERE P.SELLER_ID=? AND U.PUBLIC_USER_ID=? AND U.ACCOUNT_STATUS='ACTIVE' FOR UPDATE OF P.ROW_VERSION",id,jwt.getSubject());if(rows.isEmpty())throw new ResponseStatusException(NOT_FOUND,"Seller profile not found.");var r=rows.getFirst();if(((Number)r.get("ROW_VERSION")).longValue()!=input.expectedVersion())throw new ResponseStatusException(CONFLICT,"Profile changed. Refresh before saving.");for(String s:List.of(input.fullName(),input.address(),input.city(),input.state()))if(s.isBlank())throw new IllegalArgumentException("Profile details cannot be blank.");email(input.emailAddress(),r.get("USER_ID"));jdbc.update("UPDATE CF_SELLER_PROFILES SET FULL_NAME=?,PHONE=?,ADDRESS=?,CITY=?,STATE=?,POSTAL_CODE=?,ROW_VERSION=ROW_VERSION+1 WHERE SELLER_ID=?",input.fullName().trim(),input.phone(),input.address().trim(),input.city().trim(),input.state().trim(),input.postalCode(),id);}
- private void email(String email,Object user){String value=email.trim().toLowerCase(Locale.ROOT);if(jdbc.queryForObject("SELECT COUNT(*) FROM CF_AUTH_USERS WHERE LOWER(EMAIL_ADDRESS)=? AND USER_ID<>?",Long.class,value,user)>0)throw new ResponseStatusException(CONFLICT,"Email is already registered.");jdbc.update("UPDATE CF_AUTH_USERS SET EMAIL_ADDRESS=?,UPDATED_AT=SYSTIMESTAMP,PROFILE_VERSION=PROFILE_VERSION+1 WHERE USER_ID=?",value,user);}
- @Transactional(readOnly=true)public Object read(Jwt jwt){human(jwt,"MARKETPLACE","LENDER_OFFICER","ADMIN");var rows=jdbc.queryForList("SELECT USERNAME AS \"username\",EMAIL_ADDRESS AS \"emailAddress\",PROFILE_VERSION AS \"version\" FROM CF_AUTH_USERS WHERE PUBLIC_USER_ID=? AND ACCOUNT_STATUS='ACTIVE'",jwt.getSubject());if(rows.isEmpty())throw new ResponseStatusException(NOT_FOUND,"Account not found.");return rows.getFirst();}
- public record AccountInput(@NotBlank @Email @Size(max=255)String emailAddress,@NotNull @PositiveOrZero Long expectedVersion){}
- public Object account(AccountInput input,Jwt jwt){human(jwt,"MARKETPLACE","LENDER_OFFICER","ADMIN");String market=jwt.getClaimAsString("marketplaceId");if(market!=null)jdbc.queryForList("SELECT ROW_VERSION FROM CF_ORGANIZATIONS WHERE ORGANIZATION_ID=? FOR UPDATE",market);var rows=jdbc.queryForList("SELECT USER_ID,PROFILE_VERSION FROM CF_AUTH_USERS WHERE PUBLIC_USER_ID=? AND ACCOUNT_STATUS='ACTIVE' FOR UPDATE",jwt.getSubject());if(rows.isEmpty())throw new ResponseStatusException(NOT_FOUND,"Account not found.");var r=rows.getFirst();if(((Number)r.get("PROFILE_VERSION")).longValue()!=input.expectedVersion())throw new ResponseStatusException(CONFLICT,"Profile changed. Refresh before saving.");email(input.emailAddress(),r.get("USER_ID"));if(market!=null)jdbc.update("UPDATE CF_ORGANIZATIONS SET ROW_VERSION=ROW_VERSION+1 WHERE ORGANIZATION_ID=?",market);return read(jwt);}
+	private final JdbcTemplate jdbc;
+
+	public ProfileManagement(JdbcTemplate jdbc) {
+		this.jdbc = jdbc;
+	}
+
+	private void human(Jwt jwt, String... roles) {
+		var r = jwt == null ? null : jwt.getClaimAsStringList("roles");
+		if (r == null || Collections.disjoint(r, List.of(roles)) || jwt.getClaimAsString("client_id") != null)
+			throw new ResponseStatusException(FORBIDDEN, "Your own human account is required.");
+	}
+
+	public void seller(SellerProfileInput input, Jwt jwt) {
+		human(jwt, "SELLER");
+		String id = jwt.getClaimAsString("sellerId");
+		var rows = jdbc.queryForList(
+				"SELECT P.USER_ID,P.ROW_VERSION FROM CF_SELLER_PROFILES P JOIN CF_AUTH_USERS U ON U.USER_ID=P.USER_ID WHERE P.SELLER_ID=? AND U.PUBLIC_USER_ID=? AND U.ACCOUNT_STATUS='ACTIVE' FOR UPDATE OF P.ROW_VERSION",
+				id, jwt.getSubject());
+		if (rows.isEmpty())
+			throw new ResponseStatusException(NOT_FOUND, "Seller profile not found.");
+		var r = rows.getFirst();
+		if (((Number) r.get("ROW_VERSION")).longValue() != input.expectedVersion())
+			throw new ResponseStatusException(CONFLICT, "Profile changed. Refresh before saving.");
+		for (String s : List.of(input.fullName(), input.address(), input.city(), input.state()))
+			if (s.isBlank())
+				throw new IllegalArgumentException("Profile details cannot be blank.");
+		email(input.emailAddress(), r.get("USER_ID"));
+		jdbc.update(
+				"UPDATE CF_SELLER_PROFILES SET FULL_NAME=?,PHONE=?,ADDRESS=?,CITY=?,STATE=?,POSTAL_CODE=?,ROW_VERSION=ROW_VERSION+1 WHERE SELLER_ID=?",
+				input.fullName().trim(), input.phone(), input.address().trim(), input.city().trim(),
+				input.state().trim(), input.postalCode(), id);
+	}
+
+	private void email(String email, Object user) {
+		String value = email.trim().toLowerCase(Locale.ROOT);
+		if (jdbc.queryForObject("SELECT COUNT(*) FROM CF_AUTH_USERS WHERE LOWER(EMAIL_ADDRESS)=? AND USER_ID<>?",
+				Long.class, value, user) > 0)
+			throw new ResponseStatusException(CONFLICT, "Email is already registered.");
+		jdbc.update(
+				"UPDATE CF_AUTH_USERS SET EMAIL_ADDRESS=?,UPDATED_AT=SYSTIMESTAMP,PROFILE_VERSION=PROFILE_VERSION+1 WHERE USER_ID=?",
+				value, user);
+	}
+
+	@Transactional(readOnly = true)
+	public Object read(Jwt jwt) {
+		human(jwt, "MARKETPLACE", "LENDER_OFFICER", "ADMIN");
+		var rows = jdbc.queryForList(
+				"SELECT USERNAME AS \"username\",EMAIL_ADDRESS AS \"emailAddress\",PROFILE_VERSION AS \"version\" FROM CF_AUTH_USERS WHERE PUBLIC_USER_ID=? AND ACCOUNT_STATUS='ACTIVE'",
+				jwt.getSubject());
+		if (rows.isEmpty())
+			throw new ResponseStatusException(NOT_FOUND, "Account not found.");
+		return rows.getFirst();
+	}
+
+	public record AccountInput(@NotBlank @Email @Size(max = 255) String emailAddress,
+			@NotNull @PositiveOrZero Long expectedVersion) {
+	}
+
+	public Object account(AccountInput input, Jwt jwt) {
+		human(jwt, "MARKETPLACE", "LENDER_OFFICER", "ADMIN");
+		String market = jwt.getClaimAsString("marketplaceId");
+		if (market != null)
+			jdbc.queryForList("SELECT ROW_VERSION FROM CF_ORGANIZATIONS WHERE ORGANIZATION_ID=? FOR UPDATE", market);
+		var rows = jdbc.queryForList(
+				"SELECT USER_ID,PROFILE_VERSION FROM CF_AUTH_USERS WHERE PUBLIC_USER_ID=? AND ACCOUNT_STATUS='ACTIVE' FOR UPDATE",
+				jwt.getSubject());
+		if (rows.isEmpty())
+			throw new ResponseStatusException(NOT_FOUND, "Account not found.");
+		var r = rows.getFirst();
+		if (((Number) r.get("PROFILE_VERSION")).longValue() != input.expectedVersion())
+			throw new ResponseStatusException(CONFLICT, "Profile changed. Refresh before saving.");
+		email(input.emailAddress(), r.get("USER_ID"));
+		if (market != null)
+			jdbc.update("UPDATE CF_ORGANIZATIONS SET ROW_VERSION=ROW_VERSION+1 WHERE ORGANIZATION_ID=?", market);
+		return read(jwt);
+	}
 }

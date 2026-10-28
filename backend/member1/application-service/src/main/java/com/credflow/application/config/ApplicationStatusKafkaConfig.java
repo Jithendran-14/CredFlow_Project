@@ -24,115 +24,63 @@ import com.credflow.application.service.ApplicationStatusInbox;
 
 @Configuration
 @EnableScheduling
-@ConditionalOnProperty(
-        name = "credflow.status-consumer.enabled",
-        havingValue = "true"
-)
+@ConditionalOnProperty(name = "credflow.status-consumer.enabled", havingValue = "true")
 public class ApplicationStatusKafkaConfig {
 
-    private static final Logger log =
-            LoggerFactory.getLogger(
-                    ApplicationStatusKafkaConfig.class
-            );
+	private static final Logger log = LoggerFactory.getLogger(ApplicationStatusKafkaConfig.class);
 
-    private final ApplicationStatusInbox inbox;
+	private final ApplicationStatusInbox inbox;
 
-    public ApplicationStatusKafkaConfig(
-            ApplicationStatusInbox inbox) {
-        this.inbox = inbox;
-    }
+	public ApplicationStatusKafkaConfig(ApplicationStatusInbox inbox) {
+		this.inbox = inbox;
+	}
 
-    @Bean
-    public static ConcurrentKafkaListenerContainerFactory<String, String>
-            applicationStatusContainerFactory(
-                @Value("${spring.kafka.bootstrap-servers}")
-                String brokers) {
+	@Bean
+	public static ConcurrentKafkaListenerContainerFactory<String, String> applicationStatusContainerFactory(
+			@Value("${spring.kafka.bootstrap-servers}") String brokers) {
 
-        var properties = new HashMap<String, Object>();
+		var properties = new HashMap<String, Object>();
 
-        properties.put(
-                ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG,
-                brokers
-        );
-        properties.put(
-                ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG,
-                StringDeserializer.class
-        );
-        properties.put(
-                ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG,
-                StringDeserializer.class
-        );
-        properties.put(
-                ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG,
-                false
-        );
-        properties.put(
-                ConsumerConfig.AUTO_OFFSET_RESET_CONFIG,
-                "earliest"
-        );
-        properties.put(
-                ConsumerConfig.MAX_POLL_RECORDS_CONFIG,
-                50
-        );
+		properties.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, brokers);
+		properties.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+		properties.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+		properties.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);
+		properties.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+		properties.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, 50);
 
-        var factory =
-                new ConcurrentKafkaListenerContainerFactory<
-                        String, String>();
+		var factory = new ConcurrentKafkaListenerContainerFactory<String, String>();
 
-        factory.setConsumerFactory(
-                new DefaultKafkaConsumerFactory<>(properties)
-        );
+		factory.setConsumerFactory(new DefaultKafkaConsumerFactory<>(properties));
 
-        factory.getContainerProperties().setAckMode(
-                ContainerProperties.AckMode.RECORD
-        );
+		factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.RECORD);
 
-        // A DB failure must not discard an unrecorded Kafka message.
-        factory.setCommonErrorHandler(
-                new DefaultErrorHandler(
-                        new FixedBackOff(
-                                2000,
-                                FixedBackOff.UNLIMITED_ATTEMPTS
-                        )
-                )
-        );
+		// A DB failure must not discard an unrecorded Kafka message.
+		factory.setCommonErrorHandler(new DefaultErrorHandler(new FixedBackOff(2000, FixedBackOff.UNLIMITED_ATTEMPTS)));
 
-        return factory;
-    }
+		return factory;
+	}
 
-    @KafkaListener(
-        topics = "application.status.changed",
-        groupId =
-            "${credflow.status-consumer.group-id:application-status-v1}",
-        containerFactory = "applicationStatusContainerFactory"
-    )
-    public void receive(ConsumerRecord<String, String> record) {
-        inbox.receive(record);
-    }
+	@KafkaListener(topics = "application.status.changed", groupId = "${credflow.status-consumer.group-id:application-status-v1}", containerFactory = "applicationStatusContainerFactory")
+	public void receive(ConsumerRecord<String, String> record) {
+		inbox.receive(record);
+	}
 
-    @Scheduled(
-        fixedDelayString =
-            "${credflow.status-consumer.poll-delay-ms:2000}"
-    )
-    public void project() {
+	@Scheduled(fixedDelayString = "${credflow.status-consumer.poll-delay-ms:2000}")
+	public void project() {
 
-        try {
-            for (Long id : inbox.pending()) {
-                try {
-                    inbox.apply(id);
+		try {
+			for (Long id : inbox.pending()) {
+				try {
+					inbox.apply(id);
 
-                } catch (Exception exception) {
-                    log.warn(
-                            "Workflow projection failed: inboxId={}",
-                            id,
-                            exception
-                    );
-                    inbox.retry(id);
-                }
-            }
+				} catch (Exception exception) {
+					log.warn("Workflow projection failed: inboxId={}", id, exception);
+					inbox.retry(id);
+				}
+			}
 
-        } catch (Exception exception) {
-            log.error("Workflow inbox poll failed", exception);
-        }
-    }
+		} catch (Exception exception) {
+			log.error("Workflow inbox poll failed", exception);
+		}
+	}
 }

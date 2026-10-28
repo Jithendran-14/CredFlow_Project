@@ -9,44 +9,26 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
-public record VerificationRequest(
-        @NotNull
-        UUID verificationId,
+public record VerificationRequest(@NotNull UUID verificationId,
 
-        @NotNull
-        UUID applicationId,
+		@NotNull UUID applicationId,
 
-        @NotNull
-        @Min(1)
-        Integer applicationRevision,
+		@NotNull @Min(1) Integer applicationRevision,
 
-        @NotNull
-        UUID consentId,
+		@NotNull UUID consentId,
 
-        @NotNull
-        @Min(1)
-        Integer consentVersion,
+		@NotNull @Min(1) Integer consentVersion,
 
-        @NotNull
-        @Valid
-        OriginActor originActor,
+		@NotNull @Valid OriginActor originActor,
 
-        @Pattern(regexp = "[A-Za-z0-9._:-]{1,100}")
-        String correlationId,
+		@Pattern(regexp = "[A-Za-z0-9._:-]{1,100}") String correlationId,
 
-        UUID causationId
-) {
+		UUID causationId) {
 
-    public record OriginActor(
-            @NotBlank
-            @Pattern(regexp = "HUMAN|SYSTEM_CLIENT|SYSTEM")
-            String type,
+	public record OriginActor(@NotBlank @Pattern(regexp = "HUMAN|SYSTEM_CLIENT|SYSTEM") String type,
 
-            @NotBlank
-            @Size(max = 255)
-            String subject,
+			@NotBlank @Size(max = 255) String subject,
 
-            UUID organisationId
-    ) {
-    }
+			UUID organisationId) {
+	}
 }
